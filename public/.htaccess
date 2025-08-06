@@ -1,0 +1,19 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Redireciona para HTTPS
+    RewriteCond %{HTTPS} off
+    RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+    # Redireciona index.php para a raiz do site
+    RewriteCond %{THE_REQUEST} /index\.php [NC]
+    RewriteRule ^(.*?)index\.php$ /$1 [L,R=301,NC]
+</IfModule>
+
+# Bloqueia o acesso a arquivos de configuração e logs
+<FilesMatch "\.(env|ini|log|txt|md|yml|yaml|json|lock)$">
+    Require all denied
+</FilesMatch>
+
+# Desativa a listagem de diretórios
+Options -Indexes

@@ -29,13 +29,13 @@ class Session
     public function get($key, $default = null)
     {
         $keys = explode('.', $key);
-        $current = &$_SESSION;
+        $current = $_SESSION;
 
         foreach ($keys as $k) {
             if (!isset($current[$k])) {
                 return $default;
             }
-            $current = &$current[$k];
+            $current = $current[$k];
         }
 
         return $current;
@@ -63,6 +63,15 @@ class Session
     public function destroy()
     {
         $_SESSION = [];
+
+        if (ini_get("session.use_cookies")) {
+            $params = session_get_cookie_params();
+            setcookie(session_name(), '', time() - 42000,
+                $params["path"], $params["domain"],
+                $params["secure"], $params["httponly"]
+            );
+        }
+
         session_unset();
         session_destroy();
     }
@@ -110,7 +119,7 @@ class Session
 
     public function validateCSRF($token)
     {
-        if ($this->get('csrf_token') === null) {
+        if ($this->get('csrf_token') === null || empty($token)) {
             return false;
         }
 

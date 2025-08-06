@@ -44,6 +44,10 @@ class Validator
         if ($value !== null && $value !== '') {
             if (!is_string($value)) {
                 $this->errors[] = "O campo '{$this->name}' deve ser uma string.";
+            } else {
+                if (strlen($value) > 10000) {
+                    $this->errors[] = "O campo '{$this->name}' é muito longo.";
+                }
             }
         }
     }
@@ -89,7 +93,7 @@ class Validator
     {
         if ($value !== null && $value !== '') {
             $params = explode(',', $param);
-            if (!in_array($value, $params)) {
+            if (!in_array($value, $params, true)) {
                 $this->errors[] = "O valor para o campo '{$this->name}' não é válido.";
             }
         }
@@ -132,7 +136,7 @@ class Validator
         if ($value !== null && $value !== '') {
             $len = mb_strlen($value, 'UTF-8');
             $params = explode(',', $param);
-            if (!in_array($len, $params)) {
+            if (!in_array($len, $params, true)) {
                 $this->errors[] = "O campo '{$this->name}' deve ter o comprimento exato de um dos seguintes valores: " . implode(', ', $params) . ".";
             }
         }

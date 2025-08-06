@@ -81,7 +81,7 @@ class Auth
             $sql = "SELECT id, password FROM `users` WHERE username = ? AND status = 1 LIMIT 1";
             $stmt = Database::prepare($sql);
             $stmt->execute([$username]);
-            return $stmt->fetch() ?? null;
+            return $stmt->fetch() ?: null;
         } catch (PDOException $e) {
             error_log("[" . __CLASS__ . "@" . __METHOD__ . "]: " . $e->getMessage());
             return null;

@@ -1,0 +1,5 @@
+public/assets/
+storage/cache/
+storage/logs/
+vendor/
+composer.lock

@@ -92,7 +92,7 @@ class Router
     private function sanitizeParam($param)
     {
         $param = trim($param);
-        $param = filter_var($param, FILTER_SANITIZE_STRING, FILTER_FLAG_NO_ENCODE_QUOTES);
+        $param = htmlspecialchars($param, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 
         return $param;
     }

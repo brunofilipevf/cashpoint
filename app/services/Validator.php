@@ -145,8 +145,16 @@ class Validator
     private function validateExists($value, $name, $param)
     {
         if ($value !== null && $value !== '') {
-            // Utilizar a QueryBuilder
-            // return "O valor informado para {$name} não existe.";
+            $parts = explode(',', $param, 2);
+            $table = $parts[0];
+            $column = $parts[1];
+
+            $queryBuilder = new QueryBuilder();
+            $count = $queryBuilder->table($table)->where($column, $value)->count();
+
+            if ($count === 0) {
+                return "O valor informado para {$name} não existe.";
+            }
         }
         return null;
     }
@@ -154,8 +162,16 @@ class Validator
     private function validateUnique($value, $name, $param)
     {
         if ($value !== null && $value !== '') {
-            // Utilizar a QueryBuilder
-            // return "O valor informado para {$name} já existe.";
+            $parts = explode(',', $param, 2);
+            $table = $parts[0];
+            $column = $parts[1];
+
+            $queryBuilder = new QueryBuilder();
+            $count = $queryBuilder->table($table)->where($column, $value)->count();
+
+            if ($count > 0) {
+                return "O valor informado para {$name} já existe.";
+            }
         }
         return null;
     }

@@ -2,7 +2,7 @@
 
 define('TIMEZONE', 'America/Recife');
 
-define('APP_URL', 'http://cashpoint.test');
+define('APP_URL', 'https://cashpoint.test');
 define('APP_NAME', 'CashPoint');
 define('APP_DESC', 'Sistema de CashPoint');
 define('APP_DEBUG', true);

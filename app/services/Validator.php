@@ -3,7 +3,7 @@
 namespace App\Services;
 
 use DateTime;
-use App\Services\Database;
+use App\Services\QueryBuilder;
 
 class Validator
 {
@@ -145,17 +145,8 @@ class Validator
     private function validateExists($value, $name, $param)
     {
         if ($value !== null && $value !== '') {
-            $parts = explode(',', $param, 2);
-
-            $table = $parts[0];
-            $column = $parts[1];
-
-            $stmt = Database::prepare("SELECT COUNT(*) FROM `{$table}` WHERE `{$column}` = ? LIMIT 1");
-            $stmt->execute([$value]);
-
-            if ($stmt->fetchColumn() === 0) {
-                return "O valor informado para {$name} não existe.";
-            }
+            // Utilizar a QueryBuilder
+            // return "O valor informado para {$name} não existe.";
         }
         return null;
     }
@@ -163,17 +154,8 @@ class Validator
     private function validateUnique($value, $name, $param)
     {
         if ($value !== null && $value !== '') {
-            $parts = explode(',', $param, 2);
-
-            $table = $parts[0];
-            $column = $parts[1];
-
-            $stmt = Database::prepare("SELECT COUNT(*) FROM `{$table}` WHERE `{$column}` = ? LIMIT 1");
-            $stmt->execute([$value]);
-
-            if ($stmt->fetchColumn() > 0) {
-                return "O valor informado para {$name} já existe.";
-            }
+            // Utilizar a QueryBuilder
+            // return "O valor informado para {$name} já existe.";
         }
         return null;
     }

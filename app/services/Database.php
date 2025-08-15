@@ -8,6 +8,7 @@ class Database
 {
     private $pdo;
     private static $instance;
+    private static $allowedMethods = ['prepare', 'lastInsertId', 'beginTransaction', 'commit', 'rollback'];
 
     private function __construct()
     {
@@ -23,6 +24,10 @@ class Database
     {
         if (self::$instance === null) {
             self::$instance = new self();
+        }
+
+        if (!in_array($method, self::$allowedMethods)) {
+            return null;
         }
 
         return call_user_func_array([self::$instance->pdo, $method], $args);

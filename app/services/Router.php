@@ -44,7 +44,7 @@ class Router
             if ($route['method'] === $method && preg_match($route['pattern'], $uri, $matches)) {
                 $params = [];
                 foreach ($route['params'] as $paramName) {
-                    $params[$paramName] = $matches[$paramName];
+                    $params[$paramName] = $this->sanitizeParam($matches[$paramName]);
                 }
 
                 $this->handleMiddlewares($route['middlewares']);
@@ -64,10 +64,10 @@ class Router
             $parts = array_map('trim', explode(':', $middleware));
             $class = 'App\\Middlewares\\' . $parts[0];
 
-            $params = array_map(
-                fn($param) => htmlspecialchars(trim($param), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'),
-                array_slice($parts, 1)
-            );
+            $params = [];
+            for ($i = 1; $i < count($parts); $i++) {
+                $params[] = $this->sanitizeParam($parts[$i]);
+            }
 
             $instance = new $class();
             $instance->handle(...$params);
@@ -81,8 +81,19 @@ class Router
         } else {
             $parts = explode('@', $controller);
             $class = 'App\\Controllers\\' . $parts[0];
-            $methodName = $parts[1];
-            echo (new $class)->$methodName(...array_values($params));
+            $methodName = $parts[1] ?? 'index';
+
+            $instance = new $class();
+
+            echo $instance->$methodName(...array_values($params));
         }
+    }
+
+    private function sanitizeParam($param)
+    {
+        $param = trim($param);
+        $param = filter_var($param, FILTER_SANITIZE_STRING, FILTER_FLAG_NO_ENCODE_QUOTES);
+
+        return $param;
     }
 }

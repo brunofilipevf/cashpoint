@@ -129,14 +129,21 @@ class Session
     public function validateCSRF($token)
     {
         $sessionToken = $this->get('csrf_token');
+
+        $this->unset('csrf_token');
+
         if (empty($sessionToken) || empty($token)) {
             return false;
         }
 
-        $sessionToken = $this->get('csrf_token');
+        if (!is_string($sessionToken) || !is_string($token)) {
+            return false;
+        }
 
-        $this->unset('csrf_token');
+        if (strlen($sessionToken) !== 64 || strlen($token) !== 64) {
+            return false;
+        }
 
-        return is_string($sessionToken) && is_string($token) && hash_equals($sessionToken, $token);
+        return hash_equals($sessionToken, $token);
     }
 }

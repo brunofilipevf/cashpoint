@@ -17,13 +17,15 @@ class QueryBuilder
 
     public function table($tableName)
     {
-        $this->table = $tableName;
+        $this->table = $this->sanitizeIdentifier($tableName);
         return $this;
     }
 
     public function select(...$columns)
     {
-        $this->selects = array_merge($this->selects, $columns);
+        foreach ($columns as $column) {
+            $this->selects[] = $this->sanitizeIdentifier($column);
+        }
         return $this;
     }
 
@@ -33,6 +35,11 @@ class QueryBuilder
             $second = $operator;
             $operator = '=';
         }
+
+        $joinTable = $this->sanitizeIdentifier($joinTable);
+        $first = $this->sanitizeIdentifier($first);
+        $second = $this->sanitizeIdentifier($second);
+        $operator = $this->sanitizeOperator($operator);
 
         $this->joins[] = "LEFT JOIN `{$joinTable}` ON `{$this->table}`.`{$first}` {$operator} `{$joinTable}`.`{$second}`";
 
@@ -47,8 +54,8 @@ class QueryBuilder
         }
 
         $this->wheres[] = [
-            'column'   => $column,
-            'operator' => $operator,
+            'column'   => $this->sanitizeIdentifier($column),
+            'operator' => $this->sanitizeOperator($operator),
         ];
 
         $this->bindings[] = $value;
@@ -58,7 +65,9 @@ class QueryBuilder
 
     public function orderBy($column, $direction = 'asc')
     {
-        $this->orderBy = "ORDER BY `{$column}` " . strtoupper($direction);
+        $column = $this->sanitizeIdentifier($column);
+        $direction = strtoupper($direction) === 'DESC' ? 'DESC' : 'ASC';
+        $this->orderBy = "ORDER BY `{$column}` {$direction}";
         return $this;
     }
 
@@ -70,7 +79,9 @@ class QueryBuilder
 
     public function without(...$columns)
     {
-        $this->without = array_merge($this->without, $columns);
+        foreach ($columns as $column) {
+            $this->without[] = $this->sanitizeIdentifier($column);
+        }
         return $this;
     }
 
@@ -131,7 +142,7 @@ class QueryBuilder
 
     public function insert($data)
     {
-        $columns = array_keys($data);
+        $columns = array_map([$this, 'sanitizeIdentifier'], array_keys($data));
         $placeholders = array_fill(0, count($columns), '?');
         $bindings = array_values($data);
 
@@ -148,21 +159,23 @@ class QueryBuilder
     public function update($data)
     {
         $setClauses = [];
-        $bindings = array_values($data);
+        $updateBindings = array_values($data);
 
         foreach (array_keys($data) as $column) {
+            $column = $this->sanitizeIdentifier($column);
             $setClauses[] = "`{$column}` = ?";
         }
 
         $sql = "UPDATE `{$this->table}` SET " . implode(", ", $setClauses);
 
+        $allBindings = $updateBindings;
         if (!empty($this->wheres)) {
             $sql .= " WHERE " . $this->buildWhereClauses();
-            $bindings = array_merge($bindings, $this->bindings);
+            $allBindings = array_merge($updateBindings, $this->bindings);
         }
 
         $stmt = Database::prepare($sql);
-        $stmt->execute($bindings);
+        $stmt->execute($allBindings);
 
         $this->reset();
 
@@ -196,8 +209,13 @@ class QueryBuilder
 
     private function buildQuery()
     {
-        $selects = empty($this->selects) ? '*' : implode('`, `', $this->selects);
-        $sql = "SELECT `{$selects}` FROM `{$this->table}`";
+        if (empty($this->selects)) {
+            $selects = '*';
+        } else {
+            $selects = '`' . implode('`, `', $this->selects) . '`';
+        }
+
+        $sql = "SELECT {$selects} FROM `{$this->table}`";
 
         if (!empty($this->joins)) {
             $sql .= " " . implode(" ", $this->joins);
@@ -240,6 +258,30 @@ class QueryBuilder
             $whereClauses[] = "`{$where['column']}` {$where['operator']} ?";
         }
         return implode(' AND ', $whereClauses);
+    }
+
+    private function sanitizeIdentifier($identifier)
+    {
+        $identifier = preg_replace('/[^a-zA-Z0-9_]/', '', $identifier);
+
+        if (empty($identifier)) {
+            return 'id';
+        }
+
+        if (is_numeric($identifier[0])) {
+            $identifier = 'col_' . $identifier;
+        }
+
+        return $identifier;
+    }
+
+    private function sanitizeOperator($operator)
+    {
+        $allowedOperators = ['=', '!=', '<>', '>', '<', '>=', '<=', 'LIKE', 'NOT LIKE', 'IN', 'NOT IN', 'IS NULL', 'IS NOT NULL'];
+
+        $operator = strtoupper(trim($operator));
+
+        return in_array($operator, $allowedOperators) ? $operator : '=';
     }
 
     private function reset()

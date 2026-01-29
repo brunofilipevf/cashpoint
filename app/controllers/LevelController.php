@@ -3,12 +3,14 @@
 namespace App\Controllers;
 
 use Services\BaseController;
+use App\Models\Level;
 
 class LevelController extends BaseController
 {
     public function index()
     {
-        render('levels/index');
+        $data['levels'] = Level::findAll();
+        render('levels/index', $data);
     }
 
     public function create()

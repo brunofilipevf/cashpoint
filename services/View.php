@@ -44,7 +44,7 @@ class View
         $path = '/' . ltrim($path, '/');
 
         if ($id !== null) {
-            $path .= '/' . $id;
+            $path .= '/' . $this->e($id);
         }
 
         return APP_URL . $path;

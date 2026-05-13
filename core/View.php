@@ -101,9 +101,10 @@ class View
         }
 
         if ($format !== null) {
+            [$name, $param] = explode(':', $format, 2) + [null, null];
             $value = match ($format) {
                 'currency' => self::formatCurrency($value),
-                'date' => self::formatDate($value),
+                'date' => self::formatDate($value, $param),
                 'document' => self::formatDocument($value),
                 'status' => self::formatStatus($value),
                 default => throw new RuntimeException("Formato '{$format}' não encontrado na View")
@@ -119,8 +120,18 @@ class View
         return 'R$ ' . number_format($numeric, 2, ',', '.');
     }
 
-    private static function formatDate($value)
+    private static function formatDate($value, $param = null)
     {
+        if ($param !== null) {
+            $date = DateTime::createFromFormat($param, $value);
+
+            if ($date) {
+                return $date->format('d/m/Y H:i:s');
+            }
+
+            return $value;
+        }
+
         $date = DateTime::createFromFormat('Y-m-d H:i:s', $value);
 
         if ($date) {

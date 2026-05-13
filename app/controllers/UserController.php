@@ -133,7 +133,7 @@ class UserController
 
         $authId = Session::get('auth.id');
 
-        if ($authId === $id) {
+        if ($authId == $id) {
             Session::setFlash('danger', 'Não é possível excluir o próprio usuário');
             Response::previous();
         }

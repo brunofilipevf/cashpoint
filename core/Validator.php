@@ -230,6 +230,18 @@ class Validator
             return;
         }
 
+        # Se um formato personalizado foi informado, usa apenas ele
+        if ($param !== null) {
+            $date = DateTime::createFromFormat($param, $value);
+
+            if ($date && $date->format($param) === $value) {
+                return;
+            }
+
+            self::$errors[] = "O campo {$label} deve ser uma data válida";
+            return;
+        }
+
         $date1 = DateTime::createFromFormat('Y-m-d', $value);
 
         # Verifica se o valor corresponde ao formato de data Y-m-d (ex: 2024-01-15)

@@ -36,7 +36,7 @@ class LevelController
 
         $labels = [
             'name' => 'nome',
-            'hierarchy' => 'heirarquia'
+            'hierarchy' => 'hierarquia'
         ];
 
         $errors = Validator::fields($data, $rules, $labels);
@@ -91,7 +91,7 @@ class LevelController
 
         $labels = [
             'name' => 'nome',
-            'hierarchy' => 'heirarquia'
+            'hierarchy' => 'hierarquia'
         ];
 
         $errors = Validator::fields($data, $rules, $labels);

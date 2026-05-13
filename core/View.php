@@ -102,7 +102,7 @@ class View
 
         if ($format !== null) {
             [$name, $param] = explode(':', $format, 2) + [null, null];
-            $value = match ($format) {
+            $value = match ($name) {
                 'currency' => self::formatCurrency($value),
                 'date' => self::formatDate($value, $param),
                 'document' => self::formatDocument($value),
@@ -123,10 +123,10 @@ class View
     private static function formatDate($value, $param = null)
     {
         if ($param !== null) {
-            $date = DateTime::createFromFormat($param, $value);
+            $date = DateTime::createFromFormat('Y-m-d H:i:s', $value);
 
             if ($date) {
-                return $date->format('d/m/Y H:i:s');
+                return $date->format($param);
             }
 
             return $value;

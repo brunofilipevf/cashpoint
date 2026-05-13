@@ -12,7 +12,7 @@ class GuestOnly
         $authId = Session::get('auth.id');
 
         if ($authId !== null) {
-            Response::redirect('/');
+            return Response::redirect('/');
         }
     }
 }

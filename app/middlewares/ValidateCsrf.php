@@ -15,7 +15,7 @@ class ValidateCsrf
 
         if (!$isValid) {
             Session::setFlash('danger', 'Token de segurança inválido ou expirado');
-            Response::previous();
+            return Response::previous();
         }
     }
 }

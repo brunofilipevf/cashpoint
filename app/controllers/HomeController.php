@@ -9,6 +9,6 @@ class HomeController
 {
     public static function index()
     {
-        Response::view('home/index');
+        return Response::view('home/index');
     }
 }

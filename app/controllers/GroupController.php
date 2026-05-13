@@ -13,12 +13,12 @@ class GroupController
     public static function index()
     {
         $groups = Group::all();
-        Response::view('group/index', ['groups' => $groups]);
+        return Response::view('group/index', ['groups' => $groups]);
     }
 
     public static function add()
     {
-        Response::view('group/add');
+        return Response::view('group/add');
     }
 
     public static function insert()
@@ -29,28 +29,32 @@ class GroupController
             'created_at' => date('Y-m-d H:i:s')
         ];
 
-        $errors = Validator::fields($data, [
+        $rules = [
             'name' => 'required|string|min:2|max:60',
             'multiplier_factor' => 'required|numeric|min:0.01'
-        ], [
+        ];
+
+        $labels = [
             'name' => 'nome',
             'multiplier_factor' => 'fator multiplicador'
-        ]);
+        ];
+
+        $errors = Validator::fields($data, $rules, $labels);
 
         if ($errors) {
             Session::setFlash('danger', $errors);
-            Response::previous();
+            return Response::previous();
         }
 
         $inserted = Group::insert($data);
 
         if (!$inserted) {
             Session::setFlash('danger', 'Erro ao adicionar registro');
-            Response::previous();
+            return Response::previous();
         }
 
         Session::setFlash('success', 'Registro adicionado com sucesso');
-        Response::redirect('/groups');
+        return Response::redirect('/groups');
     }
 
     public static function edit($id)
@@ -59,10 +63,10 @@ class GroupController
 
         if (!$targetGroup) {
             Session::setFlash('danger', 'Registro não encontrado');
-            Response::previous();
+            return Response::previous();
         }
 
-        Response::view('group/edit', ['group' => $targetGroup]);
+        return Response::view('group/edit', ['group' => $targetGroup]);
     }
 
     public static function update($id)
@@ -71,7 +75,7 @@ class GroupController
 
         if (!$targetGroup) {
             Session::setFlash('danger', 'Registro não encontrado');
-            Response::previous();
+            return Response::previous();
         }
 
         $data = [
@@ -81,30 +85,34 @@ class GroupController
             'updated_at' => date('Y-m-d H:i:s')
         ];
 
-        $errors = Validator::fields($data, [
+        $rules = [
             'name' => 'required|string|min:2|max:60',
             'multiplier_factor' => 'required|numeric|min:0.01',
             'is_active' => 'required|in:0,1'
-        ], [
+        ];
+
+        $labels = [
             'name' => 'nome',
             'multiplier_factor' => 'fator multiplicador',
             'is_active' => 'status'
-        ]);
+        ];
+
+        $errors = Validator::fields($data, $rules, $labels);
 
         if ($errors) {
             Session::setFlash('danger', $errors);
-            Response::previous();
+            return Response::previous();
         }
 
         $updated = Group::update($data, $id);
 
         if (!$updated) {
             Session::setFlash('danger', 'Erro ao atualizar registro');
-            Response::previous();
+            return Response::previous();
         }
 
         Session::setFlash('success', 'Registro atualizado com sucesso');
-        Response::redirect('/groups');
+        return Response::redirect('/groups');
     }
 
     public static function delete($id)
@@ -113,17 +121,17 @@ class GroupController
 
         if (!$targetGroup) {
             Session::setFlash('danger', 'Registro não encontrado');
-            Response::previous();
+            return Response::previous();
         }
 
         $deleted = Group::delete($id);
 
         if (!$deleted) {
             Session::setFlash('danger', 'Erro ao excluir registro');
-            Response::previous();
+            return Response::previous();
         }
 
         Session::setFlash('success', 'Registro excluído com sucesso');
-        Response::redirect('/groups');
+        return Response::redirect('/groups');
     }
 }

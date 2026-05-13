@@ -13,12 +13,12 @@ class ProductController
     public static function index()
     {
         $products = Product::all();
-        Response::view('product/index', ['products' => $products]);
+        return Response::view('product/index', ['products' => $products]);
     }
 
     public static function add()
     {
-        Response::view('product/add');
+        return Response::view('product/add');
     }
 
     public static function insert()
@@ -29,28 +29,32 @@ class ProductController
             'created_at' => date('Y-m-d H:i:s')
         ];
 
-        $errors = Validator::fields($data, [
+        $rules = [
             'name' => 'required|string|min:2|max:60',
             'barcode' => 'required|string|max:13|unique:product,barcode'
-        ], [
+        ];
+
+        $labels = [
             'name' => 'nome',
             'barcode' => 'código de barras'
-        ]);
+        ];
+
+        $errors = Validator::fields($data, $rules, $labels);
 
         if ($errors) {
             Session::setFlash('danger', $errors);
-            Response::previous();
+            return Response::previous();
         }
 
         $inserted = Product::insert($data);
 
         if (!$inserted) {
             Session::setFlash('danger', 'Erro ao adicionar registro');
-            Response::previous();
+            return Response::previous();
         }
 
         Session::setFlash('success', 'Registro adicionado com sucesso');
-        Response::redirect('/products');
+        return Response::redirect('/products');
     }
 
     public static function edit($id)
@@ -59,10 +63,10 @@ class ProductController
 
         if (!$targetProduct) {
             Session::setFlash('danger', 'Registro não encontrado');
-            Response::previous();
+            return Response::previous();
         }
 
-        Response::view('product/edit', ['product' => $targetProduct]);
+        return Response::view('product/edit', ['product' => $targetProduct]);
     }
 
     public static function update($id)
@@ -71,7 +75,7 @@ class ProductController
 
         if (!$targetProduct) {
             Session::setFlash('danger', 'Registro não encontrado');
-            Response::previous();
+            return Response::previous();
         }
 
         $data = [
@@ -81,30 +85,34 @@ class ProductController
             'updated_at' => date('Y-m-d H:i:s')
         ];
 
-        $errors = Validator::fields($data, [
+        $rules = [
             'name' => 'required|string|min:2|max:60',
             'barcode' => "required|string|max:13|unique:product,barcode,{$id}",
             'is_active' => 'required|in:0,1'
-        ], [
+        ];
+
+        $labels = [
             'name' => 'nome',
             'barcode' => 'código de barras',
             'is_active' => 'status'
-        ]);
+        ];
+
+        $errors = Validator::fields($data, $rules, $labels);
 
         if ($errors) {
             Session::setFlash('danger', $errors);
-            Response::previous();
+            return Response::previous();
         }
 
         $updated = Product::update($data, $id);
 
         if (!$updated) {
             Session::setFlash('danger', 'Erro ao atualizar registro');
-            Response::previous();
+            return Response::previous();
         }
 
         Session::setFlash('success', 'Registro atualizado com sucesso');
-        Response::redirect('/products');
+        return Response::redirect('/products');
     }
 
     public static function delete($id)
@@ -113,17 +121,17 @@ class ProductController
 
         if (!$targetProduct) {
             Session::setFlash('danger', 'Registro não encontrado');
-            Response::previous();
+            return Response::previous();
         }
 
         $deleted = Product::delete($id);
 
         if (!$deleted) {
             Session::setFlash('danger', 'Erro ao excluir registro');
-            Response::previous();
+            return Response::previous();
         }
 
         Session::setFlash('success', 'Registro excluído com sucesso');
-        Response::redirect('/products');
+        return Response::redirect('/products');
     }
 }

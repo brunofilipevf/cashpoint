@@ -222,6 +222,8 @@ Helpers disponíveis dentro das views:
 e($valor, $formato, $dash)
     Escapa e formata um valor para saída HTML segura.
     Formatos: currency, date, document, status.
+    O formato 'date' aceita um parâmetro opcional de saída (ex: date:d/m/Y).
+    Se nenhum parâmetro for informado, o padrão é d/m/Y H:i:s.
     Use $dash = true para exibir travessão em valores vazios.
 
 get('chave')

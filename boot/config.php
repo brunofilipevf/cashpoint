@@ -4,7 +4,6 @@
 define('APP_NAME', 'CashPoint');
 define('APP_AUTHOR', 'Bruno Freitas');
 define('APP_DESCRIPTION', 'Sistema de CashPoint');
-define('APP_DEBUG', true);
 
 # Configurações do banco de dados
 define('DB_HOST', 'localhost');
@@ -20,14 +19,8 @@ date_default_timezone_set('America/Recife');
 # Configurações de erro e log
 ini_set('log_errors', '1');
 ini_set('error_log', dirname(__DIR__) . '/storage/php_errors.log');
-
-if (APP_DEBUG) {
-    ini_set('display_errors', '1');
-    ini_set('display_startup_errors', '1');
-} else {
-    ini_set('display_errors', '0');
-    ini_set('display_startup_errors', '0');
-}
+ini_set('display_errors', '0');
+ini_set('display_startup_errors', '0');
 
 # Configurações de sessão
 ini_set('session.save_path', dirname(__DIR__) . '/storage');

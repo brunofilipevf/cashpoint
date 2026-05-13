@@ -40,7 +40,7 @@ class Router
         $uri = Request::uri();
 
         if (!isset(self::$routes[$method])) {
-            Response::send("Método HTTP não permitido", 405);
+            return Response::send("Método HTTP não permitido", 405);
         }
 
         foreach (self::$routes[$method] as $route) {
@@ -55,7 +55,7 @@ class Router
             }
         }
 
-        Response::send("Página não encontrada", 404);
+        return Response::send("Página não encontrada", 404);
     }
 
     private static function setPreviousUri($method, $uri)

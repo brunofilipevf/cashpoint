@@ -12,7 +12,7 @@ class AuthController
 {
     public static function index()
     {
-        Response::view('auth/index');
+        return Response::view('auth/index');
     }
 
     public static function login()
@@ -22,34 +22,38 @@ class AuthController
             'password' => Request::input('password')
         ];
 
-        $errors = Validator::fields($data, [
+        $rules = [
             'username' => 'required|string',
             'password' => 'required|string'
-        ], [
+        ];
+
+        $labels = [
             'username' => 'nome de usuário',
             'password' => 'senha'
-        ]);
+        ];
+
+        $errors = Validator::fields($data, $rules, $labels);
 
         if ($errors) {
             Session::setFlash('danger', $errors);
-            Response::previous();
+            return Response::previous();
         }
 
         $authId = Auth::attempt($data);
 
         if (!$authId) {
             Session::setFlash('danger', 'Credenciais inválidas ou usuário inativo');
-            Response::previous();
+            return Response::previous();
         }
 
         Session::regenerate();
         Session::set('auth.id', $authId);
-        Response::redirect('/');
+        return Response::redirect('/');
     }
 
     public static function logout()
     {
         Session::destroy();
-        Response::redirect('/login');
+        return Response::redirect('/login');
     }
 }

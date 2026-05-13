@@ -13,12 +13,12 @@ class AwardController
     public static function index()
     {
         $awards = Award::all();
-        Response::view('award/index', ['awards' => $awards]);
+        return Response::view('award/index', ['awards' => $awards]);
     }
 
     public static function add()
     {
-        Response::view('award/add');
+        return Response::view('award/add');
     }
 
     public static function insert()
@@ -34,7 +34,7 @@ class AwardController
             'created_at' => date('Y-m-d H:i:s')
         ];
 
-        $errors = Validator::fields($data, [
+        $rules = [
             'name' => 'required|string|min:2|max:60',
             'product_id' => 'required|integer|exist:product,id',
             'required_points' => 'required|numeric|min:0.01',
@@ -42,7 +42,9 @@ class AwardController
             'max_redemptions_per_customer' => 'required|integer|min:1|before_or_equal:max_redemptions_total',
             'start_date' => 'required|date',
             'end_date' => 'required|date|after_or_equal:start_date'
-        ], [
+        ];
+
+        $labels = [
             'name' => 'nome',
             'product_id' => 'produto',
             'required_points' => 'pontos necessários',
@@ -50,22 +52,24 @@ class AwardController
             'max_redemptions_per_customer' => 'limite de resgates por cliente',
             'start_date' => 'data de início',
             'end_date' => 'data de término'
-        ]);
+        ];
+
+        $errors = Validator::fields($data, $rules, $labels);
 
         if ($errors) {
             Session::setFlash('danger', $errors);
-            Response::previous();
+            return Response::previous();
         }
 
         $inserted = Award::insert($data);
 
         if (!$inserted) {
             Session::setFlash('danger', 'Erro ao adicionar registro');
-            Response::previous();
+            return Response::previous();
         }
 
         Session::setFlash('success', 'Registro adicionado com sucesso');
-        Response::redirect('/awards');
+        return Response::redirect('/awards');
     }
 
     public static function edit($id)
@@ -74,10 +78,10 @@ class AwardController
 
         if (!$targetAward) {
             Session::setFlash('danger', 'Registro não encontrado');
-            Response::previous();
+            return Response::previous();
         }
 
-        Response::view('award/edit', ['award' => $targetAward]);
+        return Response::view('award/edit', ['award' => $targetAward]);
     }
 
     public static function update($id)
@@ -86,7 +90,7 @@ class AwardController
 
         if (!$targetAward) {
             Session::setFlash('danger', 'Registro não encontrado');
-            Response::previous();
+            return Response::previous();
         }
 
         $data = [
@@ -100,7 +104,7 @@ class AwardController
             'updated_at' => date('Y-m-d H:i:s')
         ];
 
-        $errors = Validator::fields($data, [
+        $rules = [
             'name' => 'required|string|min:2|max:60',
             'product_id' => 'required|integer|exist:product,id',
             'required_points' => 'required|numeric|min:0.01',
@@ -109,7 +113,9 @@ class AwardController
             'start_date' => 'required|date',
             'end_date' => 'required|date|after_or_equal:start_date',
             'is_active' => 'required|in:0,1'
-        ], [
+        ];
+
+        $labels = [
             'name' => 'nome',
             'product_id' => 'produto',
             'required_points' => 'pontos necessários',
@@ -118,22 +124,24 @@ class AwardController
             'start_date' => 'data de início',
             'end_date' => 'data de término',
             'is_active' => 'status'
-        ]);
+        ];
+
+        $errors = Validator::fields($data, $rules, $labels);
 
         if ($errors) {
             Session::setFlash('danger', $errors);
-            Response::previous();
+            return Response::previous();
         }
 
         $updated = Award::update($data, $id);
 
         if (!$updated) {
             Session::setFlash('danger', 'Erro ao atualizar registro');
-            Response::previous();
+            return Response::previous();
         }
 
         Session::setFlash('success', 'Registro atualizado com sucesso');
-        Response::redirect('/awards');
+        return Response::redirect('/awards');
     }
 
     public static function delete($id)
@@ -142,17 +150,17 @@ class AwardController
 
         if (!$targetAward) {
             Session::setFlash('danger', 'Registro não encontrado');
-            Response::previous();
+            return Response::previous();
         }
 
         $deleted = Award::delete($id);
 
         if (!$deleted) {
             Session::setFlash('danger', 'Erro ao excluir registro');
-            Response::previous();
+            return Response::previous();
         }
 
         Session::setFlash('success', 'Registro excluído com sucesso');
-        Response::redirect('/awards');
+        return Response::redirect('/awards');
     }
 }

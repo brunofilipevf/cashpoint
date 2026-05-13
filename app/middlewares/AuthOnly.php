@@ -12,7 +12,7 @@ class AuthOnly
         $authId = Session::get('auth.id');
 
         if ($authId === null) {
-            Response::redirect('/login');
+            return Response::redirect('/login');
         }
     }
 }

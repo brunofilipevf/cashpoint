@@ -13,12 +13,12 @@ class UserController
     public static function index()
     {
         $users = User::all();
-        Response::view('user/index', ['users' => $users]);
+        return Response::view('user/index', ['users' => $users]);
     }
 
     public static function add()
     {
-        Response::view('user/add');
+        return Response::view('user/add');
     }
 
     public static function insert()
@@ -32,34 +32,38 @@ class UserController
             'created_at' => date('Y-m-d H:i:s')
         ];
 
-        $errors = Validator::fields($data, [
+        $rules = [
             'username' => 'required|alpha|min:2|max:60|unique:user,username',
             'password' => 'required|alphanum|min:6|max:60',
             'fullname' => 'required|string|min:2|max:60',
             'level_id' => 'required|integer|exist:level,id',
             'company_id' => 'integer|exist:company,id'
-        ], [
+        ];
+
+        $labels = [
             'username' => 'nome de usuário',
             'password' => 'senha',
             'fullname' => 'nome completo',
             'level_id' => 'nível',
             'company_id' => 'empresa'
-        ]);
+        ];
+
+        $errors = Validator::fields($data, $rules, $labels);
 
         if ($errors) {
             Session::setFlash('danger', $errors);
-            Response::previous();
+            return Response::previous();
         }
 
         $inserted = User::insert($data);
 
         if (!$inserted) {
             Session::setFlash('danger', 'Erro ao adicionar registro');
-            Response::previous();
+            return Response::previous();
         }
 
         Session::setFlash('success', 'Registro adicionado com sucesso');
-        Response::redirect('/users');
+        return Response::redirect('/users');
     }
 
     public static function edit($id)
@@ -68,10 +72,10 @@ class UserController
 
         if (!$targetUser) {
             Session::setFlash('danger', 'Registro não encontrado');
-            Response::previous();
+            return Response::previous();
         }
 
-        Response::view('user/edit', ['user' => $targetUser]);
+        return Response::view('user/edit', ['user' => $targetUser]);
     }
 
     public static function update($id)
@@ -80,7 +84,7 @@ class UserController
 
         if (!$targetUser) {
             Session::setFlash('danger', 'Registro não encontrado');
-            Response::previous();
+            return Response::previous();
         }
 
         $data = [
@@ -92,34 +96,38 @@ class UserController
             'updated_at' => date('Y-m-d H:i:s')
         ];
 
-        $errors = Validator::fields($data, [
+        $rules = [
             'password' => 'alphanum|min:6|max:60',
             'fullname' => 'required|string|min:2|max:60',
             'level_id' => 'required|integer|exist:level,id',
             'company_id' => 'integer|exist:company,id',
             'is_active' => 'required|in:0,1'
-        ], [
+        ];
+
+        $labels = [
             'password' => 'senha',
             'fullname' => 'nome completo',
             'level_id' => 'nível',
             'company_id' => 'empresa',
             'is_active' => 'status'
-        ]);
+        ];
+
+        $errors = Validator::fields($data, $rules, $labels);
 
         if ($errors) {
             Session::setFlash('danger', $errors);
-            Response::previous();
+            return Response::previous();
         }
 
         $updated = User::update($data, $id);
 
         if (!$updated) {
             Session::setFlash('danger', 'Erro ao atualizar registro');
-            Response::previous();
+            return Response::previous();
         }
 
         Session::setFlash('success', 'Registro atualizado com sucesso');
-        Response::redirect('/users');
+        return Response::redirect('/users');
     }
 
     public static function delete($id)
@@ -128,24 +136,24 @@ class UserController
 
         if (!$targetUser) {
             Session::setFlash('danger', 'Registro não encontrado');
-            Response::previous();
+            return Response::previous();
         }
 
         $authId = Session::get('auth.id');
 
         if ($authId === (int) $id) {
             Session::setFlash('danger', 'Não é possível excluir o próprio usuário');
-            Response::previous();
+            return Response::previous();
         }
 
         $deleted = User::delete($id);
 
         if (!$deleted) {
             Session::setFlash('danger', 'Erro ao excluir registro');
-            Response::previous();
+            return Response::previous();
         }
 
         Session::setFlash('success', 'Registro excluído com sucesso');
-        Response::redirect('/users');
+        return Response::redirect('/users');
     }
 }

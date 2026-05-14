@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Models\Award;
+use App\Models\Product;
 use Core\Request;
 use Core\Response;
 use Core\Session;
@@ -18,7 +19,8 @@ class AwardController
 
     public static function add()
     {
-        return Response::view('award/add');
+        $products = Product::all();
+        return Response::view('award/add', ['products' => $products]);
     }
 
     public static function insert()
@@ -81,7 +83,11 @@ class AwardController
             return Response::previous();
         }
 
-        return Response::view('award/edit', ['award' => $targetAward]);
+        $products = Product::all();
+        return Response::view('award/edit', [
+            'award' => $targetAward,
+            'products' => $products
+        ]);
     }
 
     public static function update($id)

@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Models\Customer;
+use App\Models\Group;
 use Core\Request;
 use Core\Response;
 use Core\Session;
@@ -18,7 +19,8 @@ class CustomerController
 
     public static function add()
     {
-        return Response::view('customer/add');
+        $groups = Group::all();
+        return Response::view('customer/add', ['groups' => $groups]);
     }
 
     public static function insert()
@@ -75,7 +77,11 @@ class CustomerController
             return Response::previous();
         }
 
-        return Response::view('customer/edit', ['customer' => $targetCustomer]);
+        $groups = Group::all();
+        return Response::view('customer/edit', [
+            'customer' => $targetCustomer,
+            'groups' => $groups
+        ]);
     }
 
     public static function update($id)

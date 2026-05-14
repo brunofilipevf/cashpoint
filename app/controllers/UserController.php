@@ -2,6 +2,8 @@
 
 namespace App\Controllers;
 
+use App\Models\Company;
+use App\Models\Level;
 use App\Models\User;
 use Core\Request;
 use Core\Response;
@@ -18,7 +20,12 @@ class UserController
 
     public static function add()
     {
-        return Response::view('user/add');
+        $levels = Level::all();
+        $companies = Company::all();
+        return Response::view('user/add', [
+            'levels' => $levels,
+            'companies' => $companies
+        ]);
     }
 
     public static function insert()
@@ -75,7 +82,13 @@ class UserController
             return Response::previous();
         }
 
-        return Response::view('user/edit', ['user' => $targetUser]);
+        $levels = Level::all();
+        $companies = Company::all();
+        return Response::view('user/edit', [
+            'user' => $targetUser,
+            'levels' => $levels,
+            'companies' => $companies
+        ]);
     }
 
     public static function update($id)

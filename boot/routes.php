@@ -9,6 +9,12 @@ Router::post('/login', 'AuthController@login', ['GuestOnly', 'ValidateCsrf']);
 Router::get('/logout', 'AuthController@logout', ['AuthOnly']);
 
 Router::get('/scores', 'ScoreController@index', ['AuthOnly']);
+Router::get('/scores/add', 'ScoreController@add', ['AuthOnly']);
+Router::post('/scores/add', 'ScoreController@insert', ['AuthOnly', 'ValidateCsrf']);
+
+Router::get('/redemptions', 'RedemptionController@index', ['AuthOnly']);
+Router::get('/redemptions/add', 'RedemptionController@add', ['AuthOnly']);
+Router::post('/redemptions/add', 'RedemptionController@insert', ['AuthOnly', 'ValidateCsrf']);
 
 Router::get('/customers', 'CustomerController@index', ['AuthOnly']);
 Router::get('/customers/add', 'CustomerController@add', ['AuthOnly']);

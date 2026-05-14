@@ -62,7 +62,7 @@ class ScoreController
 
         $targetCustomer = Customer::getByCpf($data['cpf']);
 
-        if (!$targetCustomer || $targetCustomer['is_active'] !== 1) {
+        if (!$targetCustomer || (int) $targetCustomer['is_active'] !== 1) {
             Session::setFlash('danger', 'Cliente não encontrado ou inativo');
             return Response::previous();
         }

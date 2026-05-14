@@ -77,9 +77,11 @@ class CustomerController
             return Response::previous();
         }
 
+        $balance = Customer::getBalance($id);
         $groups = Group::all();
         return Response::view('customer/edit', [
             'customer' => $targetCustomer,
+            'balance' => $balance,
             'groups' => $groups
         ]);
     }

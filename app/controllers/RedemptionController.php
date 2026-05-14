@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Models\Award;
+use App\Models\Customer;
 use App\Models\Redemption;
 use Core\Request;
 use Core\Response;
@@ -62,15 +63,37 @@ class RedemptionController
             return Response::previous();
         }
 
-        # <verificar_periodo_de_validade_do_award>
+        $currentDate = date('Y-m-d H:i:s');
 
-        # <verificar_max_redemptions_total>
+        if ($currentDate < $targetAward['start_date'] || $currentDate > $targetAward['end_date']) {
+            Session::setFlash('danger', 'Este prêmio está fora do período de validade');
+            return Response::previous();
+        }
 
-        # <verificar_max_redemptions_per_customer>
+        $totalRedemptions = Redemption::countByAward($targetAward['id']);
+
+        if ($totalRedemptions >= (int) $targetAward['max_redemptions_total']) {
+            Session::setFlash('danger', 'O limite total de resgates para este prêmio foi esgotado');
+            return Response::previous();
+        }
+
+        $customerRedemptions = Redemption::countByAwardAndCustomer($targetAward['id'], $targetCustomer['id']);
+
+        if ($customerRedemptions >= (int) $targetAward['max_redemptions_per_customer']) {
+            Session::setFlash('danger', 'O cliente atingiu o limite máximo de resgates para este prêmio');
+            return Response::previous();
+        }
+
+        $customerBalance = Customer::getBalance($targetCustomer['id']);
+
+        if ($customerBalance < (float) $targetAward['required_points']) {
+            Session::setFlash('danger', 'O cliente não possui saldo suficiente para este resgate');
+            return Response::previous();
+        }
 
         $newData = [
             'customer_id' => $targetCustomer['id'],
-            'award_id' => $data['id'],
+            'award_id' => $data['award_id'],
             'product_id' => $targetAward['product_id'],
             'user_id' => $authId,
             'points_used' => $targetAward['required_points'],

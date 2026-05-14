@@ -52,4 +52,15 @@ class Customer
         $sql = "DELETE FROM `customer` WHERE id = ?";
         return Database::delete($sql, [$id]);
     }
+
+    public static function getBalance($id)
+    {
+        # Calcula o saldo atual do cliente subtraindo os pontos utilizados dos pontos adquiridos
+        $sql = "SELECT
+                    (SELECT COALESCE(SUM(final_points), 0) FROM `score` WHERE customer_id = ?) -
+                    (SELECT COALESCE(SUM(points_used), 0) FROM `redemption` WHERE customer_id = ?) AS balance";
+
+        $result = Database::selectOne($sql, [$id, $id]);
+        return (float) $result['balance'];
+    }
 }

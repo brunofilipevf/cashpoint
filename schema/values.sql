@@ -73,3 +73,12 @@ INSERT INTO `award` (
 VALUES (
     'Troque 800 pontos por uma Coca-Cola Lata 350ml',
     1, 800, 1000, 2, '2026-05-01', '2026-05-31');
+
+-- =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+-- SCORE VALUES
+-- =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+INSERT INTO `score` (customer_id, user_id, base_points, multiplier_factor, final_points)
+VALUES
+    (1, 2, 100.00, 1, 100.00),
+    (2, 3, 50.00, 1, 50.00);

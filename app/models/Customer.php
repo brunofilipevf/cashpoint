@@ -21,6 +21,12 @@ class Customer
         return Database::selectOne($sql, [$id]);
     }
 
+    public static function getByCpf($cpf)
+    {
+        $sql = "SELECT * FROM `customer` WHERE cpf = ? LIMIT 1";
+        return Database::selectOne($sql, [$cpf]);
+    }
+
     public static function insert($data)
     {
         $columns = implode(', ', array_keys($data));

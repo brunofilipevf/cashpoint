@@ -8,6 +8,8 @@ Router::get('/login', 'AuthController@index', ['GuestOnly']);
 Router::post('/login', 'AuthController@login', ['GuestOnly', 'ValidateCsrf']);
 Router::get('/logout', 'AuthController@logout', ['AuthOnly']);
 
+Router::get('/scores', 'ScoreController@index', ['AuthOnly']);
+
 Router::get('/customers', 'CustomerController@index', ['AuthOnly']);
 Router::get('/customers/add', 'CustomerController@add', ['AuthOnly']);
 Router::post('/customers/add', 'CustomerController@insert', ['AuthOnly', 'ValidateCsrf']);

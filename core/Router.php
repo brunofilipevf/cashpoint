@@ -20,9 +20,6 @@ class Router
 
     private static function set($method, $path, $handler, $middlewares)
     {
-        # Escapa caracteres especiais da rota para uso seguro em regex
-        # Substitui parâmetros numéricos da rota por regex de inteiros positivos, limitados a 10 dígitos (1 a 9999999999)
-        # Define início e fim da expressão para match exato da URI
         $pattern = preg_quote($path, '/');
         $pattern = str_replace(['\{id\}', '\{page\}'], '([1-9][0-9]{0,9})', $pattern);
         $pattern = "/^{$pattern}$/";

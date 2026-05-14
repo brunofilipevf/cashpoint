@@ -395,7 +395,7 @@ class Validator
             return;
         }
 
-        [$table, $column, $excludeId] = explode(':', $param) + [null, null, null];
+        [$table, $column, $excludeId] = explode(',', $param) + [null, null, null];
         $sql = "SELECT 1 FROM `{$table}` WHERE {$column} = ?";
         $params = [$value];
 

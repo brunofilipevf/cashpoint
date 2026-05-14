@@ -13,9 +13,7 @@ CREATE TABLE `level` (
     name VARCHAR(60) NOT NULL,
     hierarchy INT UNSIGNED NOT NULL,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT NULL,
-    CONSTRAINT chk_hierarchy_min
-        CHECK (hierarchy >= 1)
+    updated_at DATETIME DEFAULT NULL
 );
 
 INSERT INTO `level` (name, hierarchy)
@@ -55,7 +53,7 @@ CREATE TABLE `group` (
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT NULL,
     CONSTRAINT chk_multiplier_factor_min
-        CHECK (multiplier_factor >= 0.01)
+        CHECK (multiplier_factor >= 0)
 );
 
 INSERT INTO `group` (name, multiplier_factor, is_active)
@@ -159,11 +157,7 @@ CREATE TABLE `award` (
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT NULL,
     CONSTRAINT chk_required_points_min
-        CHECK (required_points >= 0.01),
-    CONSTRAINT chk_max_redemptions_total_min
-        CHECK (max_redemptions_total >= 1),
-    CONSTRAINT chk_max_redemptions_per_customer_min
-        CHECK (max_redemptions_per_customer >= 1),
+        CHECK (required_points >= 0),
     CONSTRAINT fk_award_product
         FOREIGN KEY (product_id)
         REFERENCES `product`(id)
@@ -189,5 +183,9 @@ DELIMITER //
     END//
 DELIMITER ;
 
-INSERT INTO `award` (name, product_id, required_points, max_redemptions_total, max_redemptions_per_customer, start_date, end_date)
-VALUES ('Troque 800 pontos por uma Coca-Cola Lata 350ml', 1, 800, 1000, 2, '2026-05-01', '2026-05-31');
+INSERT INTO `award` (
+    name, product_id, required_points,
+    max_redemptions_total, max_redemptions_per_customer, start_date, end_date)
+VALUES (
+    'Troque 800 pontos por uma Coca-Cola Lata 350ml',
+    1, 800, 1000, 2, '2026-05-01', '2026-05-31');

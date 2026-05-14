@@ -13,7 +13,8 @@ class Database
     private static function getConnection()
     {
         if (self::$connection === null) {
-            self::$connection = new PDO('mysql:host=' . DB_HOST . ';port=' . DB_PORT . ';dbname=' . DB_NAME . ';charset=' . DB_CHAR, DB_USER, DB_PASS, [
+            $dsn = 'mysql:host=' . DB_HOST . ';port=' . DB_PORT . ';dbname=' . DB_NAME . ';charset=' . DB_CHAR;
+            self::$connection = new PDO($dsn, DB_USER, DB_PASS, [
                 PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
                 PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
                 PDO::ATTR_EMULATE_PREPARES => false
@@ -84,7 +85,7 @@ class Database
             $stmt->execute($params);
             $id = self::lastInsertId();
 
-            if ($id === '0' || $id === 0) {
+            if ($id === false || $id === '0') {
                 return false;
             }
 

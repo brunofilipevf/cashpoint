@@ -16,13 +16,6 @@ CREATE TABLE `level` (
     updated_at DATETIME DEFAULT NULL
 );
 
-INSERT INTO `level` (name, hierarchy)
-VALUES
-    ('Administrador', 1),
-    ('Diretor', 2),
-    ('Gerente', 3),
-    ('Supervisor', 4);
-
 -- =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 -- COMPANY
 -- =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -36,11 +29,6 @@ CREATE TABLE `company` (
     updated_at DATETIME DEFAULT NULL
 );
 
-INSERT INTO `company` (cpf, name)
-VALUES
-    ('08072308000669', 'Posto Cruzeiro VII'),
-    ('08072308000316', 'Posto Cruzeiro IV');
-
 -- =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 -- GROUP
 -- =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -51,16 +39,8 @@ CREATE TABLE `group` (
     multiplier_factor DECIMAL(10,2) NOT NULL,
     is_active TINYINT UNSIGNED NOT NULL DEFAULT 1,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT NULL,
-    CONSTRAINT chk_multiplier_factor_min
-        CHECK (multiplier_factor >= 0)
+    updated_at DATETIME DEFAULT NULL
 );
-
-INSERT INTO `group` (name, multiplier_factor, is_active)
-VALUES
-    ('Funcionários', 1.5, 1),
-    ('Motoristas de aplicativo', 1.5, 1),
-    ('Atiaia Renovaveis', 1.3, 0);
 
 -- =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 -- PRODUCT
@@ -75,11 +55,6 @@ CREATE TABLE `product` (
     updated_at DATETIME DEFAULT NULL
 );
 
-INSERT INTO `product` (name, barcode)
-VALUES
-    ('Refri Coca Cola Lata 350ml', '1234567890123'),
-    ('Salg Coxinha de Frango', '3650');
-
 -- =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 -- USER
 -- =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -93,24 +68,8 @@ CREATE TABLE `user` (
     company_id INT UNSIGNED DEFAULT NULL,
     is_active TINYINT UNSIGNED NOT NULL DEFAULT 1,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT NULL,
-    CONSTRAINT fk_user_level
-        FOREIGN KEY (level_id)
-        REFERENCES `level`(id)
-        ON DELETE RESTRICT
-        ON UPDATE CASCADE,
-    CONSTRAINT fk_user_company
-        FOREIGN KEY (company_id)
-        REFERENCES `company`(id)
-        ON DELETE RESTRICT
-        ON UPDATE CASCADE
+    updated_at DATETIME DEFAULT NULL
 );
-
-INSERT INTO `user` (username, password, fullname, level_id)
-VALUES
-    ('admin', '$2y$10$DYw2kb5QjPOeb5QLqBp6XutGq0QkF/dV9dB234bdZ6Oqr73.f3hvi', 'Administrador do Sistema', 1),
-    ('wladimir', '$2y$10$DYw2kb5QjPOeb5QLqBp6XutGq0QkF/dV9dB234bdZ6Oqr73.f3hvi', 'Wladimir Neves da Costa', 3),
-    ('bruno', '$2y$10$DYw2kb5QjPOeb5QLqBp6XutGq0QkF/dV9dB234bdZ6Oqr73.f3hvi', 'Bruno Filipe Vasconcelos de Freitas', 4);
 
 -- =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 -- CUSTOMER
@@ -125,20 +84,8 @@ CREATE TABLE `customer` (
     group_id INT UNSIGNED DEFAULT NULL,
     is_active TINYINT UNSIGNED NOT NULL DEFAULT 1,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT NULL,
-    CONSTRAINT fk_customer_group
-        FOREIGN KEY (group_id)
-        REFERENCES `group`(id)
-        ON DELETE RESTRICT
-        ON UPDATE CASCADE
+    updated_at DATETIME DEFAULT NULL
 );
-
-INSERT INTO `customer` (cpf, fullname, group_id)
-VALUES
-    ('11122233344', 'Ailly Mayane de Brito Nunes', 1),
-    ('17823975315', NULL, NULL),
-    ('22779955042', NULL, 2),
-    ('15975324860', 'José Gilmar de Freitas', NULL);
 
 -- =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 -- AWARD
@@ -155,37 +102,33 @@ CREATE TABLE `award` (
     end_date DATETIME NOT NULL,
     is_active TINYINT UNSIGNED NOT NULL DEFAULT 1,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT NULL,
-    CONSTRAINT chk_required_points_min
-        CHECK (required_points >= 0),
-    CONSTRAINT fk_award_product
-        FOREIGN KEY (product_id)
-        REFERENCES `product`(id)
-        ON DELETE RESTRICT
-        ON UPDATE CASCADE
+    updated_at DATETIME DEFAULT NULL
 );
 
-DELIMITER //
-    CREATE TRIGGER trg_award_normalize_dates_insert
-    BEFORE INSERT ON `award`
-    FOR EACH ROW
-    BEGIN
-        SET NEW.start_date = DATE(NEW.start_date);
-        SET NEW.end_date = DATE(NEW.end_date) + INTERVAL 1 DAY - INTERVAL 1 SECOND;
-    END//
+-- =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+-- SCORE
+-- =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
-    CREATE TRIGGER trg_award_normalize_dates_update
-    BEFORE UPDATE ON `award`
-    FOR EACH ROW
-    BEGIN
-        SET NEW.start_date = DATE(NEW.start_date);
-        SET NEW.end_date = DATE(NEW.end_date) + INTERVAL 1 DAY - INTERVAL 1 SECOND;
-    END//
-DELIMITER ;
+CREATE TABLE `score` (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    customer_id INT UNSIGNED NOT NULL,
+    user_id INT UNSIGNED NOT NULL,
+    base_points DECIMAL(10,2) NOT NULL,
+    multiplier_factor DECIMAL(10,2) NOT NULL,
+    final_points DECIMAL(10,2) NOT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
 
-INSERT INTO `award` (
-    name, product_id, required_points,
-    max_redemptions_total, max_redemptions_per_customer, start_date, end_date)
-VALUES (
-    'Troque 800 pontos por uma Coca-Cola Lata 350ml',
-    1, 800, 1000, 2, '2026-05-01', '2026-05-31');
+-- =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+-- REDEMPTION
+-- =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+CREATE TABLE `redemption` (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    customer_id INT UNSIGNED NOT NULL,
+    award_id INT UNSIGNED NOT NULL,
+    product_id INT UNSIGNED NOT NULL,
+    user_id INT UNSIGNED NOT NULL,
+    points_used DECIMAL(10,2) NOT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);

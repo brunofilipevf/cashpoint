@@ -35,6 +35,11 @@ raiz/
   │   ├── assets/       # (css/js)
   │   ├── index.php
   │   └── .htaccess
+  ├── schema/           # Estrutura do banco de dados
+  │   ├── tables.sql
+  │   ├── constraints.sql
+  │   ├── triggers.sql
+  │   └── values.sql
   ├── storage/          # Logs e sessões
   └── .gitignore
 ```
@@ -43,7 +48,11 @@ raiz/
 Instalação
 ----------
 1. Aponte o document root do servidor para o diretório public
-2. Crie o banco de dados executando o arquivo schema.sql
+2. Crie o banco de dados importando os arquivos da pasta schema/ na seguinte ordem:
+   - tables.sql
+   - constraints.sql
+   - triggers.sql
+   - values.sql
 3. Configure as credenciais do banco no arquivo config.php
 4. Certifique-se de que o diretório storage tenha permissão de escrita
 

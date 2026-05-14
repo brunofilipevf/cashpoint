@@ -101,6 +101,7 @@ class AwardController
             'max_redemptions_per_customer' => Request::input('max_redemptions_per_customer'),
             'start_date' => Request::input('start_date'),
             'end_date' => Request::input('end_date'),
+            'is_active' => Request::input('is_active'),
             'updated_at' => date('Y-m-d H:i:s')
         ];
 

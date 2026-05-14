@@ -249,6 +249,11 @@ class Validator
 
     private static function validateAfterOrEqual($value, $label, $param)
     {
+        if ($param === null || $param === '') {
+            self::$errors[] = "O campo {$label} não pôde ser validado corretamente";
+            return;
+        }
+
         if ($value === null || $value === '') {
             return;
         }
@@ -283,6 +288,11 @@ class Validator
 
     private static function validateBeforeOrEqual($value, $label, $param)
     {
+        if ($param === null || $param === '') {
+            self::$errors[] = "O campo {$label} não pôde ser validado corretamente";
+            return;
+        }
+
         if ($value === null || $value === '') {
             return;
         }
@@ -317,6 +327,11 @@ class Validator
 
     private static function validateIn($value, $label, $param)
     {
+        if ($param === null || $param === '') {
+            self::$errors[] = "O campo {$label} não pôde ser validado corretamente";
+            return;
+        }
+
         if ($value === null || $value === '') {
             return;
         }
@@ -331,6 +346,11 @@ class Validator
 
     private static function validateMin($value, $label, $param)
     {
+        if ($param === null || $param === '') {
+            self::$errors[] = "O campo {$label} não pôde ser validado corretamente";
+            return;
+        }
+
         if ($value === null || $value === '') {
             return;
         }
@@ -353,6 +373,11 @@ class Validator
 
     private static function validateMax($value, $label, $param)
     {
+        if ($param === null || $param === '') {
+            self::$errors[] = "O campo {$label} não pôde ser validado corretamente";
+            return;
+        }
+
         if ($value === null || $value === '') {
             return;
         }
@@ -375,6 +400,11 @@ class Validator
 
     private static function validateExist($value, $label, $param)
     {
+        if ($param === null || $param === '') {
+            self::$errors[] = "O campo {$label} não pôde ser validado corretamente";
+            return;
+        }
+
         if ($value === null || $value === '') {
             return;
         }
@@ -391,6 +421,11 @@ class Validator
 
     private static function validateUnique($value, $label, $param)
     {
+        if ($param === null || $param === '') {
+            self::$errors[] = "O campo {$label} não pôde ser validado corretamente";
+            return;
+        }
+
         if ($value === null || $value === '') {
             return;
         }

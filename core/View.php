@@ -122,23 +122,17 @@ class View
 
     private static function formatDate($value, $param = null)
     {
-        if ($param !== null) {
-            $date = DateTime::createFromFormat('Y-m-d H:i:s', $value);
+        $date = DateTime::createFromFormat('Y-m-d H:i:s', $value);
 
-            if ($date) {
-                return $date->format($param);
-            }
-
+        if (!$date) {
             return $value;
         }
 
-        $date = DateTime::createFromFormat('Y-m-d H:i:s', $value);
-
-        if ($date) {
+        if ($param === null || $param === '') {
             return $date->format('d/m/Y H:i:s');
         }
 
-        return $value;
+        return $date->format($param);
     }
 
     private static function formatDocument($value)

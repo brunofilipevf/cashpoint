@@ -86,11 +86,9 @@ class CustomerController
             return $this->response->previous();
         }
 
-        $balance = $this->customer->getBalance($id);
         $groups = $this->group->all();
         return $this->response->render('customer/edit', [
             'customer' => $targetCustomer,
-            'balance' => $balance,
             'groups' => $groups
         ]);
     }

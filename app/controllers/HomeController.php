@@ -2,13 +2,16 @@
 
 namespace App\Controllers;
 
-use App\Models\Auth;
 use Core\Response;
 
 class HomeController
 {
-    public static function index()
+    public function __construct(
+        private Response $response
+    ) { }
+
+    public function index()
     {
-        return Response::view('home/index');
+        return $this->response->render('home/index');
     }
 }

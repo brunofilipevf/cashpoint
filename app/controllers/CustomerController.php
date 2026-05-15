@@ -11,26 +11,35 @@ use Core\Validator;
 
 class CustomerController
 {
-    public static function index()
+    public function __construct(
+        private Customer $customer,
+        private Group $group,
+        private Response $response,
+        private Request $request,
+        private Session $session,
+        private Validator $validator
+    ) { }
+
+    public function index()
     {
-        $customers = Customer::all();
-        return Response::view('customer/index', ['customers' => $customers]);
+        $customers = $this->customer->all();
+        return $this->response->render('customer/index', ['customers' => $customers]);
     }
 
-    public static function add()
+    public function add()
     {
-        $groups = Group::all();
-        return Response::view('customer/add', ['groups' => $groups]);
+        $groups = $this->group->all();
+        return $this->response->render('customer/add', ['groups' => $groups]);
     }
 
-    public static function insert()
+    public function insert()
     {
         $data = [
-            'cpf' => Request::input('cpf'),
-            'fullname' => Request::input('fullname'),
-            'email' => Request::input('email'),
-            'phone' => Request::input('phone'),
-            'group_id' => Request::input('group_id'),
+            'cpf' => $this->request->input('cpf'),
+            'fullname' => $this->request->input('fullname'),
+            'email' => $this->request->input('email'),
+            'phone' => $this->request->input('phone'),
+            'group_id' => $this->request->input('group_id'),
             'created_at' => date('Y-m-d H:i:s')
         ];
 
@@ -50,57 +59,57 @@ class CustomerController
             'group_id' => 'grupo'
         ];
 
-        $errors = Validator::fields($data, $rules, $labels);
+        $errors = $this->validator->fields($data, $rules, $labels);
 
         if ($errors) {
-            Session::setFlash('danger', $errors);
-            return Response::previous();
+            $this->session->setFlash('danger', $errors);
+            return $this->response->previous();
         }
 
-        $inserted = Customer::insert($data);
+        $inserted = $this->customer->insert($data);
 
         if (!$inserted) {
-            Session::setFlash('danger', 'Erro ao adicionar registro');
-            return Response::previous();
+            $this->session->setFlash('danger', 'Erro ao adicionar registro');
+            return $this->response->previous();
         }
 
-        Session::setFlash('success', 'Registro adicionado com sucesso');
-        return Response::redirect('/customers');
+        $this->session->setFlash('success', 'Registro adicionado com sucesso');
+        return $this->response->redirect('/customers');
     }
 
-    public static function edit($id)
+    public function edit($id)
     {
-        $targetCustomer = Customer::get($id);
+        $targetCustomer = $this->customer->get($id);
 
         if (!$targetCustomer) {
-            Session::setFlash('danger', 'Registro não encontrado');
-            return Response::previous();
+            $this->session->setFlash('danger', 'Registro não encontrado');
+            return $this->response->previous();
         }
 
-        $balance = Customer::getBalance($id);
-        $groups = Group::all();
-        return Response::view('customer/edit', [
+        $balance = $this->customer->getBalance($id);
+        $groups = $this->group->all();
+        return $this->response->render('customer/edit', [
             'customer' => $targetCustomer,
             'balance' => $balance,
             'groups' => $groups
         ]);
     }
 
-    public static function update($id)
+    public function update($id)
     {
-        $targetCustomer = Customer::get($id);
+        $targetCustomer = $this->customer->get($id);
 
         if (!$targetCustomer) {
-            Session::setFlash('danger', 'Registro não encontrado');
-            return Response::previous();
+            $this->session->setFlash('danger', 'Registro não encontrado');
+            return $this->response->previous();
         }
 
         $data = [
-            'fullname' => Request::input('fullname'),
-            'email' => Request::input('email'),
-            'phone' => Request::input('phone'),
-            'group_id' => Request::input('group_id'),
-            'is_active' => Request::input('is_active'),
+            'fullname' => $this->request->input('fullname'),
+            'email' => $this->request->input('email'),
+            'phone' => $this->request->input('phone'),
+            'group_id' => $this->request->input('group_id'),
+            'is_active' => $this->request->input('is_active'),
             'updated_at' => date('Y-m-d H:i:s')
         ];
 
@@ -120,41 +129,46 @@ class CustomerController
             'is_active' => 'status'
         ];
 
-        $errors = Validator::fields($data, $rules, $labels);
+        $errors = $this->validator->fields($data, $rules, $labels);
 
         if ($errors) {
-            Session::setFlash('danger', $errors);
-            return Response::previous();
+            $this->session->setFlash('danger', $errors);
+            return $this->response->previous();
         }
 
-        $updated = Customer::update($data, $id);
+        $updated = $this->customer->update($data, $id);
 
         if (!$updated) {
-            Session::setFlash('danger', 'Erro ao atualizar registro');
-            return Response::previous();
+            $this->session->setFlash('danger', 'Erro ao atualizar registro');
+            return $this->response->previous();
         }
 
-        Session::setFlash('success', 'Registro atualizado com sucesso');
-        return Response::redirect('/customers');
+        $this->session->setFlash('success', 'Registro atualizado com sucesso');
+        return $this->response->redirect('/customers');
     }
 
-    public static function delete($id)
+    public function delete($id)
     {
-        $targetCustomer = Customer::get($id);
+        $targetCustomer = $this->customer->get($id);
 
         if (!$targetCustomer) {
-            Session::setFlash('danger', 'Registro não encontrado');
-            return Response::previous();
+            $this->session->setFlash('danger', 'Registro não encontrado');
+            return $this->response->previous();
         }
 
-        $deleted = Customer::delete($id);
+        $deleted = $this->customer->delete($id);
+
+        if ($deleted === '23000') {
+            $this->session->setFlash('danger', 'Registro possui vínculos e não pode ser excluído');
+            return $this->response->previous();
+        }
 
         if (!$deleted) {
-            Session::setFlash('danger', 'Erro ao excluir registro');
-            return Response::previous();
+            $this->session->setFlash('danger', 'Erro ao excluir registro');
+            return $this->response->previous();
         }
 
-        Session::setFlash('success', 'Registro excluído com sucesso');
-        return Response::redirect('/customers');
+        $this->session->setFlash('success', 'Registro excluído com sucesso');
+        return $this->response->redirect('/customers');
     }
 }

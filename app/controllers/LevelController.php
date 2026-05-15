@@ -10,22 +10,30 @@ use Core\Validator;
 
 class LevelController
 {
-    public static function index()
+    public function __construct(
+        private Level $level,
+        private Response $response,
+        private Request $request,
+        private Session $session,
+        private Validator $validator
+    ) { }
+
+    public function index()
     {
-        $levels = Level::all();
-        return Response::view('level/index', ['levels' => $levels]);
+        $levels = $this->level->all();
+        return $this->response->render('level/index', ['levels' => $levels]);
     }
 
-    public static function add()
+    public function add()
     {
-        return Response::view('level/add');
+        return $this->response->render('level/add');
     }
 
-    public static function insert()
+    public function insert()
     {
         $data = [
-            'name' => Request::input('name'),
-            'hierarchy' => Request::input('hierarchy'),
+            'name' => $this->request->input('name'),
+            'hierarchy' => $this->request->input('hierarchy'),
             'created_at' => date('Y-m-d H:i:s')
         ];
 
@@ -39,48 +47,48 @@ class LevelController
             'hierarchy' => 'hierarquia'
         ];
 
-        $errors = Validator::fields($data, $rules, $labels);
+        $errors = $this->validator->fields($data, $rules, $labels);
 
         if ($errors) {
-            Session::setFlash('danger', $errors);
-            return Response::previous();
+            $this->session->setFlash('danger', $errors);
+            return $this->response->previous();
         }
 
-        $inserted = Level::insert($data);
+        $inserted = $this->level->insert($data);
 
         if (!$inserted) {
-            Session::setFlash('danger', 'Erro ao adicionar registro');
-            return Response::previous();
+            $this->session->setFlash('danger', 'Erro ao adicionar registro');
+            return $this->response->previous();
         }
 
-        Session::setFlash('success', 'Registro adicionado com sucesso');
-        return Response::redirect('/levels');
+        $this->session->setFlash('success', 'Registro adicionado com sucesso');
+        return $this->response->redirect('/levels');
     }
 
-    public static function edit($id)
+    public function edit($id)
     {
-        $targetLevel = Level::get($id);
+        $targetLevel = $this->level->get($id);
 
         if (!$targetLevel) {
-            Session::setFlash('danger', 'Registro não encontrado');
-            return Response::previous();
+            $this->session->setFlash('danger', 'Registro não encontrado');
+            return $this->response->previous();
         }
 
-        return Response::view('level/edit', ['level' => $targetLevel]);
+        return $this->response->render('level/edit', ['level' => $targetLevel]);
     }
 
-    public static function update($id)
+    public function update($id)
     {
-        $targetLevel = Level::get($id);
+        $targetLevel = $this->level->get($id);
 
         if (!$targetLevel) {
-            Session::setFlash('danger', 'Registro não encontrado');
-            return Response::previous();
+            $this->session->setFlash('danger', 'Registro não encontrado');
+            return $this->response->previous();
         }
 
         $data = [
-            'name' => Request::input('name'),
-            'hierarchy' => Request::input('hierarchy'),
+            'name' => $this->request->input('name'),
+            'hierarchy' => $this->request->input('hierarchy'),
             'updated_at' => date('Y-m-d H:i:s')
         ];
 
@@ -94,41 +102,46 @@ class LevelController
             'hierarchy' => 'hierarquia'
         ];
 
-        $errors = Validator::fields($data, $rules, $labels);
+        $errors = $this->validator->fields($data, $rules, $labels);
 
         if ($errors) {
-            Session::setFlash('danger', $errors);
-            return Response::previous();
+            $this->session->setFlash('danger', $errors);
+            return $this->response->previous();
         }
 
-        $updated = Level::update($data, $id);
+        $updated = $this->level->update($data, $id);
 
         if (!$updated) {
-            Session::setFlash('danger', 'Erro ao atualizar registro');
-            return Response::previous();
+            $this->session->setFlash('danger', 'Erro ao atualizar registro');
+            return $this->response->previous();
         }
 
-        Session::setFlash('success', 'Registro atualizado com sucesso');
-        return Response::redirect('/levels');
+        $this->session->setFlash('success', 'Registro atualizado com sucesso');
+        return $this->response->redirect('/levels');
     }
 
-    public static function delete($id)
+    public function delete($id)
     {
-        $targetLevel = Level::get($id);
+        $targetLevel = $this->level->get($id);
 
         if (!$targetLevel) {
-            Session::setFlash('danger', 'Registro não encontrado');
-            return Response::previous();
+            $this->session->setFlash('danger', 'Registro não encontrado');
+            return $this->response->previous();
         }
 
-        $deleted = Level::delete($id);
+        $deleted = $this->level->delete($id);
+
+        if ($deleted === '23000') {
+            $this->session->setFlash('danger', 'Registro possui vínculos e não pode ser excluído');
+            return $this->response->previous();
+        }
 
         if (!$deleted) {
-            Session::setFlash('danger', 'Erro ao excluir registro');
-            return Response::previous();
+            $this->session->setFlash('danger', 'Erro ao excluir registro');
+            return $this->response->previous();
         }
 
-        Session::setFlash('success', 'Registro excluído com sucesso');
-        return Response::redirect('/levels');
+        $this->session->setFlash('success', 'Registro excluído com sucesso');
+        return $this->response->redirect('/levels');
     }
 }

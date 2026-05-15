@@ -8,27 +8,31 @@ use Throwable;
 
 class View
 {
-    private static $data = [];
-    private static $vars = [];
+    private $data = [];
+    private $vars = [];
 
-    public static function render($path, $data = [])
+    public function __construct(
+        private Container $container
+    ) { }
+
+    public function render($path, $data = [])
     {
-        self::$data = $data;
-        return self::include($path);
+        $this->data = $data;
+        return $this->include($path);
     }
 
-    private static function helpers()
+    private function helpers()
     {
         return [
-            'include' => [self::class, 'include'],
-            'set' => [self::class, 'set'],
-            'get' => [self::class, 'get'],
-            'isBaseRoute' => [self::class, 'isBaseRoute'],
-            'e' => [self::class, 'escape']
+            'include' => [$this, 'include'],
+            'set' => [$this, 'set'],
+            'get' => [$this, 'get'],
+            'isRoute' => [$this, 'isRoute'],
+            'e' => [$this, 'escape']
         ];
     }
 
-    private static function include($path)
+    private function include($path)
     {
         $viewPath = dirname(__DIR__) . '/app/views/';
         $viewFile = $path . '.php';
@@ -37,8 +41,8 @@ class View
             throw new RuntimeException("View {$viewFile} não encontrada");
         }
 
-        extract(self::$data, EXTR_SKIP);
-        extract(self::helpers(), EXTR_SKIP);
+        extract($this->data, EXTR_SKIP);
+        extract($this->helpers(), EXTR_SKIP);
         ob_start();
 
         try {
@@ -50,39 +54,43 @@ class View
         }
     }
 
-    private static function set($key, $value)
+    private function set($key, $value)
     {
-        self::$vars[$key] = $value;
+        $this->vars[$key] = $value;
     }
 
-    private static function get($key)
+    private function get($key)
     {
-        if (isset(self::$vars[$key])) {
-            return self::$vars[$key];
+        if (isset($this->vars[$key])) {
+            return $this->vars[$key];
         }
 
         return match ($key) {
             'app_name' => APP_NAME,
             'app_author' => APP_AUTHOR,
             'app_description' => APP_DESCRIPTION,
-            'flash_message' => Session::getFlash(),
-            'csrf_token' => Session::getCsrf(),
+            'flash_message' => $this->session()->getFlash(),
+            'csrf_token' => $this->session()->getCsrf(),
             default => throw new RuntimeException("Variável '{$key}' não encontrada na View")
         };
     }
 
-    private static function isBaseRoute($baseRoute)
+    private function isRoute($route, $strict = false)
     {
-        $currentUri = Request::uri();
+        $currentUri = $this->request()->uri();
 
-        if ($baseRoute === '/') {
+        if ($strict) {
+            return $currentUri === $route;
+        }
+
+        if ($route === '/') {
             return $currentUri === '/';
         }
 
-        return str_starts_with($currentUri, $baseRoute);
+        return str_starts_with($currentUri, $route);
     }
 
-    private static function escape($value, $format = null, $dash = false)
+    private function escape($value, $format = null, $dash = false)
     {
         if (!is_string($value) && !is_int($value) && !is_float($value)) {
             if ($dash) {
@@ -103,10 +111,10 @@ class View
         if ($format !== null) {
             [$name, $param] = explode(':', $format, 2) + [null, null];
             $value = match ($name) {
-                'currency' => self::formatCurrency($value),
-                'date' => self::formatDate($value, $param),
-                'document' => self::formatDocument($value),
-                'status' => self::formatStatus($value),
+                'currency' => $this->formatCurrency($value),
+                'date' => $this->formatDate($value, $param),
+                'document' => $this->formatDocument($value),
+                'status' => $this->formatStatus($value),
                 default => throw new RuntimeException("Formato '{$format}' não encontrado na View")
             };
         }
@@ -114,13 +122,13 @@ class View
         return htmlspecialchars($value, ENT_QUOTES | ENT_HTML5, 'UTF-8');
     }
 
-    private static function formatCurrency($value)
+    private function formatCurrency($value)
     {
         $numeric = (float) $value;
         return 'R$ ' . number_format($numeric, 2, ',', '.');
     }
 
-    private static function formatDate($value, $param = null)
+    private function formatDate($value, $param = null)
     {
         $date = DateTime::createFromFormat('Y-m-d H:i:s', $value);
 
@@ -132,10 +140,14 @@ class View
             return $date->format('d/m/Y H:i:s');
         }
 
-        return $date->format($param);
+        try {
+            return $date->format($param);
+        } catch (Throwable $e) {
+            return $value;
+        }
     }
 
-    private static function formatDocument($value)
+    private function formatDocument($value)
     {
         $clean = preg_replace('/\D/', '', $value);
         $length = mb_strlen($clean, 'UTF-8');
@@ -147,12 +159,22 @@ class View
         };
     }
 
-    private static function formatStatus($value)
+    private function formatStatus($value)
     {
         if ((int) $value !== 1) {
             return 'Inativo';
         }
 
         return 'Ativo';
+    }
+
+    private function request()
+    {
+        return $this->container->get(Request::class);
+    }
+
+    private function session()
+    {
+        return $this->container->get(Session::class);
     }
 }

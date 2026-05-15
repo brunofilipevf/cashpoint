@@ -6,66 +6,70 @@ use RuntimeException;
 
 class Router
 {
-    private static $routes = [];
+    private $routes = [];
 
-    public static function get($path, $handler, $middlewares)
+    public function __construct(
+        private Container $container
+    ) { }
+
+    public function get($path, $handler, $middlewares)
     {
-        self::set('GET', $path, $handler, $middlewares);
+        $this->set('GET', $path, $handler, $middlewares);
     }
 
-    public static function post($path, $handler, $middlewares)
+    public function post($path, $handler, $middlewares)
     {
-        self::set('POST', $path, $handler, $middlewares);
+        $this->set('POST', $path, $handler, $middlewares);
     }
 
-    private static function set($method, $path, $handler, $middlewares)
+    private function set($method, $path, $handler, $middlewares)
     {
         $pattern = preg_quote($path, '/');
         $pattern = str_replace(['\{id\}', '\{page\}'], '([1-9][0-9]{0,9})', $pattern);
         $pattern = "/^{$pattern}$/";
 
-        self::$routes[$method][] = [
+        $this->routes[$method][] = [
             'pattern' => $pattern,
             'handler' => $handler,
             'middlewares' => $middlewares
         ];
     }
 
-    public static function dispatch()
+    public function dispatch()
     {
-        $method = Request::method();
-        $uri = Request::uri();
+        $method = $this->request()->method();
+        $uri = $this->request()->uri();
 
-        if (!isset(self::$routes[$method])) {
-            return Response::send("Método HTTP não permitido", 405);
+        if (!isset($this->routes[$method])) {
+            return $this->response()->send("Método HTTP não permitido", 405);
         }
 
-        foreach (self::$routes[$method] as $route) {
+        foreach ($this->routes[$method] as $route) {
             if (preg_match($route['pattern'], $uri, $matches)) {
                 array_shift($matches);
 
-                self::setPreviousUri($method, $uri);
-                self::runMiddlewares($route['middlewares']);
-                self::runController($route['handler'], $matches);
+                $this->setPreviousUri($method, $uri);
+                $this->runMiddlewares($route['middlewares']);
+                $this->runController($route['handler'], $matches);
 
                 return;
             }
         }
 
-        return Response::send("Página não encontrada", 404);
+        return $this->response()->send("Página não encontrada", 404);
     }
 
-    private static function setPreviousUri($method, $uri)
+    private function setPreviousUri($method, $uri)
     {
-        $current = Session::get('current_uri');
+        $current = $this->session()->get('current_uri');
 
         if ($method === 'GET') {
             # Em GET, a URI anterior vira previous, e a atual vira current
             if ($current !== null && $current !== $uri) {
-                Session::set('previous_uri', $current);
+                $this->session()->set('previous_uri', $current);
             }
 
-            Session::set('current_uri', $uri);
+            $this->session()->set('current_uri', $uri);
             return;
         }
 
@@ -74,10 +78,10 @@ class Router
             $current = '/';
         }
 
-        Session::set('previous_uri', $current);
+        $this->session()->set('previous_uri', $current);
     }
 
-    private static function runMiddlewares($middlewares)
+    private function runMiddlewares($middlewares)
     {
         foreach ($middlewares as $middleware) {
             if ($middleware === '') {
@@ -94,11 +98,12 @@ class Router
                 throw new RuntimeException("Método 'handle' não encontrado no middleware '{$middleware}'");
             }
 
-            $middlewareClass::handle();
+            $middlewareInstance = $this->container->get($middlewareClass);
+            $middlewareInstance->handle();
         }
     }
 
-    private static function runController($handler, $matches)
+    private function runController($handler, $matches)
     {
         [$controller, $action] = explode('@', $handler, 2);
         $controllerClass = 'App\\Controllers\\' . $controller;
@@ -111,6 +116,22 @@ class Router
             throw new RuntimeException("Action '{$action}' não encontrado no controller '{$controller}'");
         }
 
-        $controllerClass::$action(...$matches);
+        $controllerInstance = $this->container->get($controllerClass);
+        $controllerInstance->$action(...$matches);
+    }
+
+    private function request()
+    {
+        return $this->container->get(Request::class);
+    }
+
+    private function response()
+    {
+        return $this->container->get(Response::class);
+    }
+
+    private function session()
+    {
+        return $this->container->get(Session::class);
     }
 }

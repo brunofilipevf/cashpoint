@@ -6,41 +6,42 @@ use Core\Database;
 
 class Company
 {
-    public static function all()
+    public function __construct(
+        private Database $db
+    ) { }
+
+    public function all()
     {
         $sql = "SELECT * FROM `company` ORDER BY id DESC";
-        return Database::select($sql);
+        return $this->db->select($sql);
     }
 
-    public static function get($id)
+    public function get($id)
     {
         $sql = "SELECT * FROM `company` WHERE id = ? LIMIT 1";
-        return Database::selectOne($sql, [$id]);
+        return $this->db->selectOne($sql, [$id]);
     }
 
-    public static function insert($data)
+    public function insert($data)
     {
         $columns = implode(', ', array_keys($data));
         $placeholders = implode(', ', array_fill(0, count($data), '?'));
-
         $sql = "INSERT INTO `company` ({$columns}) VALUES ({$placeholders})";
-        return Database::insert($sql, array_values($data));
+        return $this->db->insert($sql, array_values($data));
     }
 
-    public static function update($data, $id)
+    public function update($data, $id)
     {
         $set = implode(' = ?, ', array_keys($data)) . ' = ?';
-
         $sql = "UPDATE `company` SET {$set} WHERE id = ?";
         $params = array_values($data);
         $params[] = $id;
-
-        return Database::update($sql, $params);
+        return $this->db->update($sql, $params);
     }
 
-    public static function delete($id)
+    public function delete($id)
     {
         $sql = "DELETE FROM `company` WHERE id = ?";
-        return Database::delete($sql, [$id]);
+        return $this->db->delete($sql, [$id]);
     }
 }

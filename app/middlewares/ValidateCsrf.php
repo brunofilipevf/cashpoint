@@ -8,14 +8,20 @@ use Core\Session;
 
 class ValidateCsrf
 {
-    public static function handle()
+    public function __construct(
+        private Request $request,
+        private Response $response,
+        private Session $session
+    ) { }
+
+    public function handle()
     {
-        $token = Request::input('csrf_token');
-        $isValid = Session::validateCsrf($token);
+        $token = $this->request->input('csrf_token');
+        $isValid = $this->session->validateCsrf($token);
 
         if (!$isValid) {
-            Session::setFlash('danger', 'Token de segurança inválido ou expirado');
-            return Response::previous();
+            $this->session->setFlash('danger', 'Token de segurança inválido ou expirado');
+            return $this->response->previous();
         }
     }
 }

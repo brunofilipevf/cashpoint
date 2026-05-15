@@ -11,28 +11,37 @@ use Core\Validator;
 
 class AwardController
 {
-    public static function index()
+    public function __construct(
+        private Award $award,
+        private Product $product,
+        private Response $response,
+        private Request $request,
+        private Session $session,
+        private Validator $validator
+    ) { }
+
+    public function index()
     {
-        $awards = Award::all();
-        return Response::view('award/index', ['awards' => $awards]);
+        $awards = $this->award->all();
+        return $this->response->render('award/index', ['awards' => $awards]);
     }
 
-    public static function add()
+    public function add()
     {
-        $products = Product::all();
-        return Response::view('award/add', ['products' => $products]);
+        $products = $this->product->all();
+        return $this->response->render('award/add', ['products' => $products]);
     }
 
-    public static function insert()
+    public function insert()
     {
         $data = [
-            'name' => Request::input('name'),
-            'product_id' => Request::input('product_id'),
-            'required_points' => Request::input('required_points'),
-            'max_redemptions_total' => Request::input('max_redemptions_total'),
-            'max_redemptions_per_customer' => Request::input('max_redemptions_per_customer'),
-            'start_date' => Request::input('start_date'),
-            'end_date' => Request::input('end_date'),
+            'name' => $this->request->input('name'),
+            'product_id' => $this->request->input('product_id'),
+            'required_points' => $this->request->input('required_points'),
+            'max_redemptions_total' => $this->request->input('max_redemptions_total'),
+            'max_redemptions_per_customer' => $this->request->input('max_redemptions_per_customer'),
+            'start_date' => $this->request->input('start_date'),
+            'end_date' => $this->request->input('end_date'),
             'created_at' => date('Y-m-d H:i:s')
         ];
 
@@ -56,58 +65,58 @@ class AwardController
             'end_date' => 'data de término'
         ];
 
-        $errors = Validator::fields($data, $rules, $labels);
+        $errors = $this->validator->fields($data, $rules, $labels);
 
         if ($errors) {
-            Session::setFlash('danger', $errors);
-            return Response::previous();
+            $this->session->setFlash('danger', $errors);
+            return $this->response->previous();
         }
 
-        $inserted = Award::insert($data);
+        $inserted = $this->award->insert($data);
 
         if (!$inserted) {
-            Session::setFlash('danger', 'Erro ao adicionar registro');
-            return Response::previous();
+            $this->session->setFlash('danger', 'Erro ao adicionar registro');
+            return $this->response->previous();
         }
 
-        Session::setFlash('success', 'Registro adicionado com sucesso');
-        return Response::redirect('/awards');
+        $this->session->setFlash('success', 'Registro adicionado com sucesso');
+        return $this->response->redirect('/awards');
     }
 
-    public static function edit($id)
+    public function edit($id)
     {
-        $targetAward = Award::get($id);
+        $targetAward = $this->award->get($id);
 
         if (!$targetAward) {
-            Session::setFlash('danger', 'Registro não encontrado');
-            return Response::previous();
+            $this->session->setFlash('danger', 'Registro não encontrado');
+            return $this->response->previous();
         }
 
-        $products = Product::all();
-        return Response::view('award/edit', [
+        $products = $this->product->all();
+        return $this->response->render('award/edit', [
             'award' => $targetAward,
             'products' => $products
         ]);
     }
 
-    public static function update($id)
+    public function update($id)
     {
-        $targetAward = Award::get($id);
+        $targetAward = $this->award->get($id);
 
         if (!$targetAward) {
-            Session::setFlash('danger', 'Registro não encontrado');
-            return Response::previous();
+            $this->session->setFlash('danger', 'Registro não encontrado');
+            return $this->response->previous();
         }
 
         $data = [
-            'name' => Request::input('name'),
-            'product_id' => Request::input('product_id'),
-            'required_points' => Request::input('required_points'),
-            'max_redemptions_total' => Request::input('max_redemptions_total'),
-            'max_redemptions_per_customer' => Request::input('max_redemptions_per_customer'),
-            'start_date' => Request::input('start_date'),
-            'end_date' => Request::input('end_date'),
-            'is_active' => Request::input('is_active'),
+            'name' => $this->request->input('name'),
+            'product_id' => $this->request->input('product_id'),
+            'required_points' => $this->request->input('required_points'),
+            'max_redemptions_total' => $this->request->input('max_redemptions_total'),
+            'max_redemptions_per_customer' => $this->request->input('max_redemptions_per_customer'),
+            'start_date' => $this->request->input('start_date'),
+            'end_date' => $this->request->input('end_date'),
+            'is_active' => $this->request->input('is_active'),
             'updated_at' => date('Y-m-d H:i:s')
         ];
 
@@ -133,41 +142,51 @@ class AwardController
             'is_active' => 'status'
         ];
 
-        $errors = Validator::fields($data, $rules, $labels);
+        $errors = $this->validator->fields($data, $rules, $labels);
 
         if ($errors) {
-            Session::setFlash('danger', $errors);
-            return Response::previous();
+            $this->session->setFlash('danger', $errors);
+            return $this->response->previous();
         }
 
-        $updated = Award::update($data, $id);
+        $updated = $this->award->update($data, $id);
+
+        if ($updated === '45001') {
+            $this->session->setFlash('danger', 'Prêmio com resgates não pode ter o produto alterado');
+            return $this->response->previous();
+        }
 
         if (!$updated) {
-            Session::setFlash('danger', 'Erro ao atualizar registro');
-            return Response::previous();
+            $this->session->setFlash('danger', 'Erro ao atualizar registro');
+            return $this->response->previous();
         }
 
-        Session::setFlash('success', 'Registro atualizado com sucesso');
-        return Response::redirect('/awards');
+        $this->session->setFlash('success', 'Registro atualizado com sucesso');
+        return $this->response->redirect('/awards');
     }
 
-    public static function delete($id)
+    public function delete($id)
     {
-        $targetAward = Award::get($id);
+        $targetAward = $this->award->get($id);
 
         if (!$targetAward) {
-            Session::setFlash('danger', 'Registro não encontrado');
-            return Response::previous();
+            $this->session->setFlash('danger', 'Registro não encontrado');
+            return $this->response->previous();
         }
 
-        $deleted = Award::delete($id);
+        $deleted = $this->award->delete($id);
+
+        if ($deleted === '23000') {
+            $this->session->setFlash('danger', 'Registro possui vínculos e não pode ser excluído');
+            return $this->response->previous();
+        }
 
         if (!$deleted) {
-            Session::setFlash('danger', 'Erro ao excluir registro');
-            return Response::previous();
+            $this->session->setFlash('danger', 'Erro ao excluir registro');
+            return $this->response->previous();
         }
 
-        Session::setFlash('success', 'Registro excluído com sucesso');
-        return Response::redirect('/awards');
+        $this->session->setFlash('success', 'Registro excluído com sucesso');
+        return $this->response->redirect('/awards');
     }
 }

@@ -10,16 +10,24 @@ use Core\Validator;
 
 class AuthController
 {
-    public static function index()
+    public function __construct(
+        private Auth $auth,
+        private Response $response,
+        private Request $request,
+        private Session $session,
+        private Validator $validator
+    ) { }
+
+    public function index()
     {
-        return Response::view('auth/index');
+        return $this->response->render('auth/index');
     }
 
-    public static function login()
+    public function login()
     {
         $data = [
-            'username' => Request::input('username'),
-            'password' => Request::input('password')
+            'username' => $this->request->input('username'),
+            'password' => $this->request->input('password')
         ];
 
         $rules = [
@@ -32,28 +40,28 @@ class AuthController
             'password' => 'senha'
         ];
 
-        $errors = Validator::fields($data, $rules, $labels);
+        $errors = $this->validator->fields($data, $rules, $labels);
 
         if ($errors) {
-            Session::setFlash('danger', $errors);
-            return Response::previous();
+            $this->session->setFlash('danger', $errors);
+            return $this->response->previous();
         }
 
-        $authId = Auth::attempt($data);
+        $authId = $this->auth->attempt($data);
 
         if (!$authId) {
-            Session::setFlash('danger', 'Credenciais inválidas ou usuário inativo');
-            return Response::previous();
+            $this->session->setFlash('danger', 'Credenciais inválidas ou usuário inativo');
+            return $this->response->previous();
         }
 
-        Session::regenerate();
-        Session::set('auth.id', $authId);
-        return Response::redirect('/');
+        $this->session->regenerate();
+        $this->session->set('auth.id', $authId);
+        return $this->response->redirect('/');
     }
 
-    public static function logout()
+    public function logout()
     {
-        Session::destroy();
-        return Response::redirect('/login');
+        $this->session->destroy();
+        return $this->response->redirect('/login');
     }
 }

@@ -6,10 +6,14 @@ use Core\Database;
 
 class Auth
 {
-    public static function attempt($data)
+    public function __construct(
+        private Database $db
+    ) { }
+
+    public function attempt($data)
     {
         $sql = "SELECT id, password FROM `user` WHERE username = ? AND is_active = 1 LIMIT 1";
-        $user = Database::selectOne($sql, [$data['username']]);
+        $user = $this->db->selectOne($sql, [$data['username']]);
 
         if ($user === false) {
             return false;

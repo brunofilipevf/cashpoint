@@ -4,7 +4,7 @@ namespace Core;
 
 class Request
 {
-    public static function method()
+    public function method()
     {
         if (!isset($_SERVER['REQUEST_METHOD'])) {
             return 'GET';
@@ -13,7 +13,7 @@ class Request
         return $_SERVER['REQUEST_METHOD'];
     }
 
-    public static function uri()
+    public function uri()
     {
         if (!isset($_SERVER['REQUEST_URI'])) {
             return '/';
@@ -29,7 +29,7 @@ class Request
         return $uri;
     }
 
-    public static function input($key)
+    public function input($key)
     {
         if (!isset($_POST[$key])) {
             return null;

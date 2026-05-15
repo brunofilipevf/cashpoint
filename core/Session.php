@@ -4,12 +4,15 @@ namespace Core;
 
 class Session
 {
-    public static function set($key, $value)
+    public function __construct()
     {
         if (session_status() !== PHP_SESSION_ACTIVE) {
             session_start();
         }
+    }
 
+    public function set($key, $value)
+    {
         $keys = explode('.', $key);
         $session = &$_SESSION;
 
@@ -20,12 +23,8 @@ class Session
         $session = $value;
     }
 
-    public static function get($key)
+    public function get($key)
     {
-        if (session_status() !== PHP_SESSION_ACTIVE) {
-            session_start();
-        }
-
         $keys = explode('.', $key);
         $session = $_SESSION;
 
@@ -39,12 +38,8 @@ class Session
         return $session;
     }
 
-    public static function unset($key)
+    public function unset($key)
     {
-        if (session_status() !== PHP_SESSION_ACTIVE) {
-            session_start();
-        }
-
         $keys = explode('.', $key);
         $last = array_pop($keys);
         $session = &$_SESSION;
@@ -59,12 +54,8 @@ class Session
         unset($session[$last]);
     }
 
-    public static function destroy()
+    public function destroy()
     {
-        if (session_status() !== PHP_SESSION_ACTIVE) {
-            session_start();
-        }
-
         $_SESSION = [];
         $params = session_get_cookie_params();
 
@@ -80,31 +71,27 @@ class Session
         session_destroy();
     }
 
-    public static function regenerate()
+    public function regenerate()
     {
-        if (session_status() !== PHP_SESSION_ACTIVE) {
-            session_start();
-        }
-
         session_regenerate_id(true);
     }
 
-    public static function setFlash($type, $message)
+    public function setFlash($type, $message)
     {
         if (is_array($message)) {
             $message = implode("\n", $message);
         }
 
-        self::set('flash.type', $type);
-        self::set('flash.message', $message);
+        $this->set('flash.type', $type);
+        $this->set('flash.message', $message);
     }
 
-    public static function getFlash()
+    public function getFlash()
     {
-        $type = self::get('flash.type');
-        $message = self::get('flash.message');
+        $type = $this->get('flash.type');
+        $message = $this->get('flash.message');
 
-        self::unset('flash');
+        $this->unset('flash');
 
         if ($type === null || $message === null) {
             return [];
@@ -116,22 +103,22 @@ class Session
         ];
     }
 
-    public static function getCsrf()
+    public function getCsrf()
     {
-        $stored = self::get('csrf_token');
+        $stored = $this->get('csrf_token');
 
         if ($stored === null) {
             $token = bin2hex(random_bytes(32));
-            self::set('csrf_token', $token);
+            $this->set('csrf_token', $token);
             return $token;
         }
 
         return $stored;
     }
 
-    public static function validateCsrf($token)
+    public function validateCsrf($token)
     {
-        $stored = self::get('csrf_token');
+        $stored = $this->get('csrf_token');
 
         if ($stored === null || $token === null) {
             return false;
@@ -141,7 +128,7 @@ class Session
             return false;
         }
 
-        self::unset('csrf_token');
+        $this->unset('csrf_token');
         return true;
     }
 }

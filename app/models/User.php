@@ -6,53 +6,52 @@ use Core\Database;
 
 class User
 {
-    public static function all()
+    public function __construct(
+        private Database $db
+    ) { }
+
+    public function all()
     {
         $sql = "SELECT u.*, l.name AS level_name, c.name AS company_name
                 FROM `user` u
                 INNER JOIN `level` l ON u.level_id = l.id
                 LEFT JOIN `company` c ON u.company_id = c.id
                 ORDER BY u.id DESC";
-        return Database::select($sql);
+        return $this->db->select($sql);
     }
 
-    public static function get($id)
+    public function get($id)
     {
         $sql = "SELECT * FROM `user` WHERE id = ? LIMIT 1";
-        return Database::selectOne($sql, [$id]);
+        return $this->db->selectOne($sql, [$id]);
     }
 
-    public static function insert($data)
+    public function insert($data)
     {
-        $data = self::hashPassword($data);
-
+        $data = $this->hashPassword($data);
         $columns = implode(', ', array_keys($data));
         $placeholders = implode(', ', array_fill(0, count($data), '?'));
-
         $sql = "INSERT INTO `user` ({$columns}) VALUES ({$placeholders})";
-        return Database::insert($sql, array_values($data));
+        return $this->db->insert($sql, array_values($data));
     }
 
-    public static function update($data, $id)
+    public function update($data, $id)
     {
-        $data = self::hashPassword($data);
-
+        $data = $this->hashPassword($data);
         $set = implode(' = ?, ', array_keys($data)) . ' = ?';
-
         $sql = "UPDATE `user` SET {$set} WHERE id = ?";
         $params = array_values($data);
         $params[] = $id;
-
-        return Database::update($sql, $params);
+        return $this->db->update($sql, $params);
     }
 
-    public static function delete($id)
+    public function delete($id)
     {
         $sql = "DELETE FROM `user` WHERE id = ?";
-        return Database::delete($sql, [$id]);
+        return $this->db->delete($sql, [$id]);
     }
 
-    private static function hashPassword($data)
+    private function hashPassword($data)
     {
         if (isset($data['password']) && $data['password'] !== null && $data['password'] !== '') {
             $data['password'] = password_hash($data['password'], PASSWORD_BCRYPT);

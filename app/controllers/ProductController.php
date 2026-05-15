@@ -10,22 +10,30 @@ use Core\Validator;
 
 class ProductController
 {
-    public static function index()
+    public function __construct(
+        private Product $product,
+        private Response $response,
+        private Request $request,
+        private Session $session,
+        private Validator $validator
+    ) { }
+
+    public function index()
     {
-        $products = Product::all();
-        return Response::view('product/index', ['products' => $products]);
+        $products = $this->product->all();
+        return $this->response->render('product/index', ['products' => $products]);
     }
 
-    public static function add()
+    public function add()
     {
-        return Response::view('product/add');
+        return $this->response->render('product/add');
     }
 
-    public static function insert()
+    public function insert()
     {
         $data = [
-            'name' => Request::input('name'),
-            'barcode' => Request::input('barcode'),
+            'name' => $this->request->input('name'),
+            'barcode' => $this->request->input('barcode'),
             'created_at' => date('Y-m-d H:i:s')
         ];
 
@@ -39,49 +47,49 @@ class ProductController
             'barcode' => 'código de barras'
         ];
 
-        $errors = Validator::fields($data, $rules, $labels);
+        $errors = $this->validator->fields($data, $rules, $labels);
 
         if ($errors) {
-            Session::setFlash('danger', $errors);
-            return Response::previous();
+            $this->session->setFlash('danger', $errors);
+            return $this->response->previous();
         }
 
-        $inserted = Product::insert($data);
+        $inserted = $this->product->insert($data);
 
         if (!$inserted) {
-            Session::setFlash('danger', 'Erro ao adicionar registro');
-            return Response::previous();
+            $this->session->setFlash('danger', 'Erro ao adicionar registro');
+            return $this->response->previous();
         }
 
-        Session::setFlash('success', 'Registro adicionado com sucesso');
-        return Response::redirect('/products');
+        $this->session->setFlash('success', 'Registro adicionado com sucesso');
+        return $this->response->redirect('/products');
     }
 
-    public static function edit($id)
+    public function edit($id)
     {
-        $targetProduct = Product::get($id);
+        $targetProduct = $this->product->get($id);
 
         if (!$targetProduct) {
-            Session::setFlash('danger', 'Registro não encontrado');
-            return Response::previous();
+            $this->session->setFlash('danger', 'Registro não encontrado');
+            return $this->response->previous();
         }
 
-        return Response::view('product/edit', ['product' => $targetProduct]);
+        return $this->response->render('product/edit', ['product' => $targetProduct]);
     }
 
-    public static function update($id)
+    public function update($id)
     {
-        $targetProduct = Product::get($id);
+        $targetProduct = $this->product->get($id);
 
         if (!$targetProduct) {
-            Session::setFlash('danger', 'Registro não encontrado');
-            return Response::previous();
+            $this->session->setFlash('danger', 'Registro não encontrado');
+            return $this->response->previous();
         }
 
         $data = [
-            'name' => Request::input('name'),
-            'barcode' => Request::input('barcode'),
-            'is_active' => Request::input('is_active'),
+            'name' => $this->request->input('name'),
+            'barcode' => $this->request->input('barcode'),
+            'is_active' => $this->request->input('is_active'),
             'updated_at' => date('Y-m-d H:i:s')
         ];
 
@@ -97,41 +105,46 @@ class ProductController
             'is_active' => 'status'
         ];
 
-        $errors = Validator::fields($data, $rules, $labels);
+        $errors = $this->validator->fields($data, $rules, $labels);
 
         if ($errors) {
-            Session::setFlash('danger', $errors);
-            return Response::previous();
+            $this->session->setFlash('danger', $errors);
+            return $this->response->previous();
         }
 
-        $updated = Product::update($data, $id);
+        $updated = $this->product->update($data, $id);
 
         if (!$updated) {
-            Session::setFlash('danger', 'Erro ao atualizar registro');
-            return Response::previous();
+            $this->session->setFlash('danger', 'Erro ao atualizar registro');
+            return $this->response->previous();
         }
 
-        Session::setFlash('success', 'Registro atualizado com sucesso');
-        return Response::redirect('/products');
+        $this->session->setFlash('success', 'Registro atualizado com sucesso');
+        return $this->response->redirect('/products');
     }
 
-    public static function delete($id)
+    public function delete($id)
     {
-        $targetProduct = Product::get($id);
+        $targetProduct = $this->product->get($id);
 
         if (!$targetProduct) {
-            Session::setFlash('danger', 'Registro não encontrado');
-            return Response::previous();
+            $this->session->setFlash('danger', 'Registro não encontrado');
+            return $this->response->previous();
         }
 
-        $deleted = Product::delete($id);
+        $deleted = $this->product->delete($id);
+
+        if ($deleted === '23000') {
+            $this->session->setFlash('danger', 'Registro possui vínculos e não pode ser excluído');
+            return $this->response->previous();
+        }
 
         if (!$deleted) {
-            Session::setFlash('danger', 'Erro ao excluir registro');
-            return Response::previous();
+            $this->session->setFlash('danger', 'Erro ao excluir registro');
+            return $this->response->previous();
         }
 
-        Session::setFlash('success', 'Registro excluído com sucesso');
-        return Response::redirect('/products');
+        $this->session->setFlash('success', 'Registro excluído com sucesso');
+        return $this->response->redirect('/products');
     }
 }

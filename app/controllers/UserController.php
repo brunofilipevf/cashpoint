@@ -12,30 +12,40 @@ use Core\Validator;
 
 class UserController
 {
-    public static function index()
+    public function __construct(
+        private Company $company,
+        private Level $level,
+        private User $user,
+        private Response $response,
+        private Request $request,
+        private Session $session,
+        private Validator $validator
+    ) { }
+
+    public function index()
     {
-        $users = User::all();
-        return Response::view('user/index', ['users' => $users]);
+        $users = $this->user->all();
+        return $this->response->render('user/index', ['users' => $users]);
     }
 
-    public static function add()
+    public function add()
     {
-        $levels = Level::all();
-        $companies = Company::all();
-        return Response::view('user/add', [
+        $levels = $this->level->all();
+        $companies = $this->company->all();
+        return $this->response->render('user/add', [
             'levels' => $levels,
             'companies' => $companies
         ]);
     }
 
-    public static function insert()
+    public function insert()
     {
         $data = [
-            'username' => Request::input('username'),
-            'password' => Request::input('password'),
-            'fullname' => Request::input('fullname'),
-            'level_id' => Request::input('level_id'),
-            'company_id' => Request::input('company_id'),
+            'username' => $this->request->input('username'),
+            'password' => $this->request->input('password'),
+            'fullname' => $this->request->input('fullname'),
+            'level_id' => $this->request->input('level_id'),
+            'company_id' => $this->request->input('company_id'),
             'created_at' => date('Y-m-d H:i:s')
         ];
 
@@ -55,57 +65,57 @@ class UserController
             'company_id' => 'empresa'
         ];
 
-        $errors = Validator::fields($data, $rules, $labels);
+        $errors = $this->validator->fields($data, $rules, $labels);
 
         if ($errors) {
-            Session::setFlash('danger', $errors);
-            return Response::previous();
+            $this->session->setFlash('danger', $errors);
+            return $this->response->previous();
         }
 
-        $inserted = User::insert($data);
+        $inserted = $this->user->insert($data);
 
         if (!$inserted) {
-            Session::setFlash('danger', 'Erro ao adicionar registro');
-            return Response::previous();
+            $this->session->setFlash('danger', 'Erro ao adicionar registro');
+            return $this->response->previous();
         }
 
-        Session::setFlash('success', 'Registro adicionado com sucesso');
-        return Response::redirect('/users');
+        $this->session->setFlash('success', 'Registro adicionado com sucesso');
+        return $this->response->redirect('/users');
     }
 
-    public static function edit($id)
+    public function edit($id)
     {
-        $targetUser = User::get($id);
+        $targetUser = $this->user->get($id);
 
         if (!$targetUser) {
-            Session::setFlash('danger', 'Registro não encontrado');
-            return Response::previous();
+            $this->session->setFlash('danger', 'Registro não encontrado');
+            return $this->response->previous();
         }
 
-        $levels = Level::all();
-        $companies = Company::all();
-        return Response::view('user/edit', [
+        $levels = $this->level->all();
+        $companies = $this->company->all();
+        return $this->response->render('user/edit', [
             'user' => $targetUser,
             'levels' => $levels,
             'companies' => $companies
         ]);
     }
 
-    public static function update($id)
+    public function update($id)
     {
-        $targetUser = User::get($id);
+        $targetUser = $this->user->get($id);
 
         if (!$targetUser) {
-            Session::setFlash('danger', 'Registro não encontrado');
-            return Response::previous();
+            $this->session->setFlash('danger', 'Registro não encontrado');
+            return $this->response->previous();
         }
 
         $data = [
-            'password' => Request::input('password'),
-            'fullname' => Request::input('fullname'),
-            'level_id' => Request::input('level_id'),
-            'company_id' => Request::input('company_id'),
-            'is_active' => Request::input('is_active'),
+            'password' => $this->request->input('password'),
+            'fullname' => $this->request->input('fullname'),
+            'level_id' => $this->request->input('level_id'),
+            'company_id' => $this->request->input('company_id'),
+            'is_active' => $this->request->input('is_active'),
             'updated_at' => date('Y-m-d H:i:s')
         ];
 
@@ -125,48 +135,53 @@ class UserController
             'is_active' => 'status'
         ];
 
-        $errors = Validator::fields($data, $rules, $labels);
+        $errors = $this->validator->fields($data, $rules, $labels);
 
         if ($errors) {
-            Session::setFlash('danger', $errors);
-            return Response::previous();
+            $this->session->setFlash('danger', $errors);
+            return $this->response->previous();
         }
 
-        $updated = User::update($data, $id);
+        $updated = $this->user->update($data, $id);
 
         if (!$updated) {
-            Session::setFlash('danger', 'Erro ao atualizar registro');
-            return Response::previous();
+            $this->session->setFlash('danger', 'Erro ao atualizar registro');
+            return $this->response->previous();
         }
 
-        Session::setFlash('success', 'Registro atualizado com sucesso');
-        return Response::redirect('/users');
+        $this->session->setFlash('success', 'Registro atualizado com sucesso');
+        return $this->response->redirect('/users');
     }
 
-    public static function delete($id)
+    public function delete($id)
     {
-        $targetUser = User::get($id);
+        $targetUser = $this->user->get($id);
 
         if (!$targetUser) {
-            Session::setFlash('danger', 'Registro não encontrado');
-            return Response::previous();
+            $this->session->setFlash('danger', 'Registro não encontrado');
+            return $this->response->previous();
         }
 
-        $authId = Session::get('auth.id');
+        $authId = $this->session->get('auth.id');
 
         if ($authId === (int) $id) {
-            Session::setFlash('danger', 'Não é possível excluir o próprio usuário');
-            return Response::previous();
+            $this->session->setFlash('danger', 'Não é possível excluir o próprio usuário');
+            return $this->response->previous();
         }
 
-        $deleted = User::delete($id);
+        $deleted = $this->user->delete($id);
+
+        if ($deleted === 23000) {
+            $this->session->setFlash('danger', 'Registro possui vínculos e não pode ser excluído');
+            return $this->response->previous();
+        }
 
         if (!$deleted) {
-            Session::setFlash('danger', 'Erro ao excluir registro');
-            return Response::previous();
+            $this->session->setFlash('danger', 'Erro ao excluir registro');
+            return $this->response->previous();
         }
 
-        Session::setFlash('success', 'Registro excluído com sucesso');
-        return Response::redirect('/users');
+        $this->session->setFlash('success', 'Registro excluído com sucesso');
+        return $this->response->redirect('/users');
     }
 }

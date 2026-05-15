@@ -10,22 +10,30 @@ use Core\Validator;
 
 class CompanyController
 {
-    public static function index()
+    public function __construct(
+        private Company $company,
+        private Response $response,
+        private Request $request,
+        private Session $session,
+        private Validator $validator
+    ) { }
+
+    public function index()
     {
-        $companies = Company::all();
-        return Response::view('company/index', ['companies' => $companies]);
+        $companies = $this->company->all();
+        return $this->response->render('company/index', ['companies' => $companies]);
     }
 
-    public static function add()
+    public function add()
     {
-        return Response::view('company/add');
+        return $this->response->render('company/add');
     }
 
-    public static function insert()
+    public function insert()
     {
         $data = [
-            'cpf' => Request::input('cpf'),
-            'name' => Request::input('name'),
+            'cpf' => $this->request->input('cpf'),
+            'name' => $this->request->input('name'),
             'created_at' => date('Y-m-d H:i:s')
         ];
 
@@ -39,48 +47,48 @@ class CompanyController
             'name' => 'nome'
         ];
 
-        $errors = Validator::fields($data, $rules, $labels);
+        $errors = $this->validator->fields($data, $rules, $labels);
 
         if ($errors) {
-            Session::setFlash('danger', $errors);
-            return Response::previous();
+            $this->session->setFlash('danger', $errors);
+            return $this->response->previous();
         }
 
-        $inserted = Company::insert($data);
+        $inserted = $this->company->insert($data);
 
         if (!$inserted) {
-            Session::setFlash('danger', 'Erro ao adicionar registro');
-            return Response::previous();
+            $this->session->setFlash('danger', 'Erro ao adicionar registro');
+            return $this->response->previous();
         }
 
-        Session::setFlash('success', 'Registro adicionado com sucesso');
-        return Response::redirect('/companies');
+        $this->session->setFlash('success', 'Registro adicionado com sucesso');
+        return $this->response->redirect('/companies');
     }
 
-    public static function edit($id)
+    public function edit($id)
     {
-        $targetCompany = Company::get($id);
+        $targetCompany = $this->company->get($id);
 
         if (!$targetCompany) {
-            Session::setFlash('danger', 'Registro não encontrado');
-            return Response::previous();
+            $this->session->setFlash('danger', 'Registro não encontrado');
+            return $this->response->previous();
         }
 
-        return Response::view('company/edit', ['company' => $targetCompany]);
+        return $this->response->render('company/edit', ['company' => $targetCompany]);
     }
 
-    public static function update($id)
+    public function update($id)
     {
-        $targetCompany = Company::get($id);
+        $targetCompany = $this->company->get($id);
 
         if (!$targetCompany) {
-            Session::setFlash('danger', 'Registro não encontrado');
-            return Response::previous();
+            $this->session->setFlash('danger', 'Registro não encontrado');
+            return $this->response->previous();
         }
 
         $data = [
-            'name' => Request::input('name'),
-            'is_active' => Request::input('is_active'),
+            'name' => $this->request->input('name'),
+            'is_active' => $this->request->input('is_active'),
             'updated_at' => date('Y-m-d H:i:s')
         ];
 
@@ -94,41 +102,46 @@ class CompanyController
             'is_active' => 'status'
         ];
 
-        $errors = Validator::fields($data, $rules, $labels);
+        $errors = $this->validator->fields($data, $rules, $labels);
 
         if ($errors) {
-            Session::setFlash('danger', $errors);
-            return Response::previous();
+            $this->session->setFlash('danger', $errors);
+            return $this->response->previous();
         }
 
-        $updated = Company::update($data, $id);
+        $updated = $this->company->update($data, $id);
 
         if (!$updated) {
-            Session::setFlash('danger', 'Erro ao atualizar registro');
-            return Response::previous();
+            $this->session->setFlash('danger', 'Erro ao atualizar registro');
+            return $this->response->previous();
         }
 
-        Session::setFlash('success', 'Registro atualizado com sucesso');
-        return Response::redirect('/companies');
+        $this->session->setFlash('success', 'Registro atualizado com sucesso');
+        return $this->response->redirect('/companies');
     }
 
-    public static function delete($id)
+    public function delete($id)
     {
-        $targetCompany = Company::get($id);
+        $targetCompany = $this->company->get($id);
 
         if (!$targetCompany) {
-            Session::setFlash('danger', 'Registro não encontrado');
-            return Response::previous();
+            $this->session->setFlash('danger', 'Registro não encontrado');
+            return $this->response->previous();
         }
 
-        $deleted = Company::delete($id);
+        $deleted = $this->company->delete($id);
+
+        if ($deleted === '23000') {
+            $this->session->setFlash('danger', 'Registro possui vínculos e não pode ser excluído');
+            return $this->response->previous();
+        }
 
         if (!$deleted) {
-            Session::setFlash('danger', 'Erro ao excluir registro');
-            return Response::previous();
+            $this->session->setFlash('danger', 'Erro ao excluir registro');
+            return $this->response->previous();
         }
 
-        Session::setFlash('success', 'Registro excluído com sucesso');
-        return Response::redirect('/companies');
+        $this->session->setFlash('success', 'Registro excluído com sucesso');
+        return $this->response->redirect('/companies');
     }
 }

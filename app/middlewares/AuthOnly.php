@@ -7,12 +7,17 @@ use Core\Session;
 
 class AuthOnly
 {
-    public static function handle()
+    public function __construct(
+        private Response $response,
+        private Session $session
+    ) { }
+
+    public function handle()
     {
-        $authId = Session::get('auth.id');
+        $authId = $this->session->get('auth.id');
 
         if ($authId === null) {
-            return Response::redirect('/login');
+            return $this->response->redirect('/login');
         }
     }
 }

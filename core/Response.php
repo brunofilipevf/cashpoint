@@ -4,62 +4,66 @@ namespace Core;
 
 class Response
 {
-    private static $headers = [];
+    private $headers = [];
 
-    public static function send($content, $statusCode = 200)
+    public function __construct(
+        private Container $container
+    ) { }
+
+    public function send($content, $statusCode = 200)
     {
         http_response_code($statusCode);
 
-        self::setHeader('Content-Type', 'text/html; charset=UTF-8');
-        self::setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
-        self::setHeader('X-Content-Type-Options', 'nosniff');
-        self::setHeader('X-Frame-Options', 'DENY');
-        self::setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
-        self::setHeader('Permissions-Policy', 'geolocation=(), microphone=(), camera=(), payment=()');
-        self::setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
-        self::setHeader('Content-Security-Policy', self::getCsp());
-        self::getHeaders();
+        $this->setHeader('Content-Type', 'text/html; charset=UTF-8');
+        $this->setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
+        $this->setHeader('X-Content-Type-Options', 'nosniff');
+        $this->setHeader('X-Frame-Options', 'DENY');
+        $this->setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+        $this->setHeader('Permissions-Policy', 'geolocation=(), microphone=(), camera=(), payment=()');
+        $this->setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+        $this->setHeader('Content-Security-Policy', $this->getCsp());
+        $this->getHeaders();
 
         exit($content);
     }
 
-    public static function view($path, $data = [], $statusCode = 200)
+    public function render($path, $data = [], $statusCode = 200)
     {
-        $content = View::render($path, $data);
-        self::send($content, $statusCode);
+        $content = $this->view()->render($path, $data);
+        $this->send($content, $statusCode);
     }
 
-    public static function redirect($path, $statusCode = 302)
+    public function redirect($path, $statusCode = 302)
     {
         http_response_code($statusCode);
 
-        self::setHeader('Location', $path);
-        self::setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
-        self::setHeader('Pragma', 'no-cache');
-        self::getHeaders();
+        $this->setHeader('Location', $path);
+        $this->setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+        $this->setHeader('Pragma', 'no-cache');
+        $this->getHeaders();
 
         exit;
     }
 
-    public static function previous($statusCode = 302)
+    public function previous($statusCode = 302)
     {
-        $previousUri = Session::get('previous_uri');
-        self::redirect($previousUri, $statusCode);
+        $previousUri = $this->session()->get('previous_uri');
+        $this->redirect($previousUri, $statusCode);
     }
 
-    private static function setHeader($key, $value)
+    private function setHeader($key, $value)
     {
-        self::$headers[$key] = $value;
+        $this->headers[$key] = $value;
     }
 
-    private static function getHeaders()
+    private function getHeaders()
     {
-        foreach (self::$headers as $key => $value) {
+        foreach ($this->headers as $key => $value) {
             header("{$key}: {$value}");
         }
     }
 
-    private static function getCsp()
+    private function getCsp()
     {
         return "default-src 'none'; " .
                "script-src 'self'; " .
@@ -72,5 +76,15 @@ class Response
                "base-uri 'self'; " .
                "form-action 'self'; " .
                "upgrade-insecure-requests";
+    }
+
+    private function session()
+    {
+        return $this->container->get(Session::class);
+    }
+
+    private function view()
+    {
+        return $this->container->get(View::class);
     }
 }

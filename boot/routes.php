@@ -1,68 +1,56 @@
 <?php
 
-use Core\Router;
+$router->get('/', 'HomeController@index', ['AuthOnly']);
 
-Router::get('/', 'HomeController@index', ['AuthOnly']);
+$router->get('/login', 'AuthController@index', ['GuestOnly']);
+$router->post('/login', 'AuthController@login', ['GuestOnly', 'ValidateCsrf']);
+$router->get('/logout', 'AuthController@logout', ['AuthOnly']);
 
-Router::get('/login', 'AuthController@index', ['GuestOnly']);
-Router::post('/login', 'AuthController@login', ['GuestOnly', 'ValidateCsrf']);
-Router::get('/logout', 'AuthController@logout', ['AuthOnly']);
+$router->get('/customers', 'CustomerController@index', ['AuthOnly']);
+$router->get('/customers/add', 'CustomerController@add', ['AuthOnly']);
+$router->post('/customers/add', 'CustomerController@insert', ['AuthOnly', 'ValidateCsrf']);
+$router->get('/customers/edit/{id}', 'CustomerController@edit', ['AuthOnly']);
+$router->post('/customers/edit/{id}', 'CustomerController@update', ['AuthOnly', 'ValidateCsrf']);
+$router->get('/customers/delete/{id}', 'CustomerController@delete', ['AuthOnly']);
 
-Router::get('/scores', 'ScoreController@index', ['AuthOnly']);
-Router::get('/scores/add', 'ScoreController@add', ['AuthOnly']);
-Router::post('/scores/add', 'ScoreController@insert', ['AuthOnly', 'ValidateCsrf']);
+$router->get('/groups', 'GroupController@index', ['AuthOnly']);
+$router->get('/groups/add', 'GroupController@add', ['AuthOnly']);
+$router->post('/groups/add', 'GroupController@insert', ['AuthOnly', 'ValidateCsrf']);
+$router->get('/groups/edit/{id}', 'GroupController@edit', ['AuthOnly']);
+$router->post('/groups/edit/{id}', 'GroupController@update', ['AuthOnly', 'ValidateCsrf']);
+$router->get('/groups/delete/{id}', 'GroupController@delete', ['AuthOnly']);
 
-Router::get('/redemptions', 'RedemptionController@index', ['AuthOnly']);
-Router::get('/redemptions/add', 'RedemptionController@add', ['AuthOnly']);
-Router::post('/redemptions/add', 'RedemptionController@insert', ['AuthOnly', 'ValidateCsrf']);
+$router->get('/awards', 'AwardController@index', ['AuthOnly']);
+$router->get('/awards/add', 'AwardController@add', ['AuthOnly']);
+$router->post('/awards/add', 'AwardController@insert', ['AuthOnly', 'ValidateCsrf']);
+$router->get('/awards/edit/{id}', 'AwardController@edit', ['AuthOnly']);
+$router->post('/awards/edit/{id}', 'AwardController@update', ['AuthOnly', 'ValidateCsrf']);
+$router->get('/awards/delete/{id}', 'AwardController@delete', ['AuthOnly']);
 
-Router::get('/customers', 'CustomerController@index', ['AuthOnly']);
-Router::get('/customers/add', 'CustomerController@add', ['AuthOnly']);
-Router::post('/customers/add', 'CustomerController@insert', ['AuthOnly', 'ValidateCsrf']);
-Router::get('/customers/edit/{id}', 'CustomerController@edit', ['AuthOnly']);
-Router::post('/customers/edit/{id}', 'CustomerController@update', ['AuthOnly', 'ValidateCsrf']);
-Router::get('/customers/delete/{id}', 'CustomerController@delete', ['AuthOnly']);
+$router->get('/products', 'ProductController@index', ['AuthOnly']);
+$router->get('/products/add', 'ProductController@add', ['AuthOnly']);
+$router->post('/products/add', 'ProductController@insert', ['AuthOnly', 'ValidateCsrf']);
+$router->get('/products/edit/{id}', 'ProductController@edit', ['AuthOnly']);
+$router->post('/products/edit/{id}', 'ProductController@update', ['AuthOnly', 'ValidateCsrf']);
+$router->get('/products/delete/{id}', 'ProductController@delete', ['AuthOnly']);
 
-Router::get('/groups', 'GroupController@index', ['AuthOnly']);
-Router::get('/groups/add', 'GroupController@add', ['AuthOnly']);
-Router::post('/groups/add', 'GroupController@insert', ['AuthOnly', 'ValidateCsrf']);
-Router::get('/groups/edit/{id}', 'GroupController@edit', ['AuthOnly']);
-Router::post('/groups/edit/{id}', 'GroupController@update', ['AuthOnly', 'ValidateCsrf']);
-Router::get('/groups/delete/{id}', 'GroupController@delete', ['AuthOnly']);
+$router->get('/users', 'UserController@index', ['AuthOnly']);
+$router->get('/users/add', 'UserController@add', ['AuthOnly']);
+$router->post('/users/add', 'UserController@insert', ['AuthOnly', 'ValidateCsrf']);
+$router->get('/users/edit/{id}', 'UserController@edit', ['AuthOnly']);
+$router->post('/users/edit/{id}', 'UserController@update', ['AuthOnly', 'ValidateCsrf']);
+$router->get('/users/delete/{id}', 'UserController@delete', ['AuthOnly']);
 
-Router::get('/awards', 'AwardController@index', ['AuthOnly']);
-Router::get('/awards/add', 'AwardController@add', ['AuthOnly']);
-Router::post('/awards/add', 'AwardController@insert', ['AuthOnly', 'ValidateCsrf']);
-Router::get('/awards/edit/{id}', 'AwardController@edit', ['AuthOnly']);
-Router::post('/awards/edit/{id}', 'AwardController@update', ['AuthOnly', 'ValidateCsrf']);
-Router::get('/awards/delete/{id}', 'AwardController@delete', ['AuthOnly']);
+$router->get('/levels', 'LevelController@index', ['AuthOnly']);
+$router->get('/levels/add', 'LevelController@add', ['AuthOnly']);
+$router->post('/levels/add', 'LevelController@insert', ['AuthOnly', 'ValidateCsrf']);
+$router->get('/levels/edit/{id}', 'LevelController@edit', ['AuthOnly']);
+$router->post('/levels/edit/{id}', 'LevelController@update', ['AuthOnly', 'ValidateCsrf']);
+$router->get('/levels/delete/{id}', 'LevelController@delete', ['AuthOnly']);
 
-Router::get('/products', 'ProductController@index', ['AuthOnly']);
-Router::get('/products/add', 'ProductController@add', ['AuthOnly']);
-Router::post('/products/add', 'ProductController@insert', ['AuthOnly', 'ValidateCsrf']);
-Router::get('/products/edit/{id}', 'ProductController@edit', ['AuthOnly']);
-Router::post('/products/edit/{id}', 'ProductController@update', ['AuthOnly', 'ValidateCsrf']);
-Router::get('/products/delete/{id}', 'ProductController@delete', ['AuthOnly']);
-
-Router::get('/users', 'UserController@index', ['AuthOnly']);
-Router::get('/users/add', 'UserController@add', ['AuthOnly']);
-Router::post('/users/add', 'UserController@insert', ['AuthOnly', 'ValidateCsrf']);
-Router::get('/users/edit/{id}', 'UserController@edit', ['AuthOnly']);
-Router::post('/users/edit/{id}', 'UserController@update', ['AuthOnly', 'ValidateCsrf']);
-Router::get('/users/delete/{id}', 'UserController@delete', ['AuthOnly']);
-
-Router::get('/levels', 'LevelController@index', ['AuthOnly']);
-Router::get('/levels/add', 'LevelController@add', ['AuthOnly']);
-Router::post('/levels/add', 'LevelController@insert', ['AuthOnly', 'ValidateCsrf']);
-Router::get('/levels/edit/{id}', 'LevelController@edit', ['AuthOnly']);
-Router::post('/levels/edit/{id}', 'LevelController@update', ['AuthOnly', 'ValidateCsrf']);
-Router::get('/levels/delete/{id}', 'LevelController@delete', ['AuthOnly']);
-
-Router::get('/companies', 'CompanyController@index', ['AuthOnly']);
-Router::get('/companies/add', 'CompanyController@add', ['AuthOnly']);
-Router::post('/companies/add', 'CompanyController@insert', ['AuthOnly', 'ValidateCsrf']);
-Router::get('/companies/edit/{id}', 'CompanyController@edit', ['AuthOnly']);
-Router::post('/companies/edit/{id}', 'CompanyController@update', ['AuthOnly', 'ValidateCsrf']);
-Router::get('/companies/delete/{id}', 'CompanyController@delete', ['AuthOnly']);
-
-Router::dispatch();
+$router->get('/companies', 'CompanyController@index', ['AuthOnly']);
+$router->get('/companies/add', 'CompanyController@add', ['AuthOnly']);
+$router->post('/companies/add', 'CompanyController@insert', ['AuthOnly', 'ValidateCsrf']);
+$router->get('/companies/edit/{id}', 'CompanyController@edit', ['AuthOnly']);
+$router->post('/companies/edit/{id}', 'CompanyController@update', ['AuthOnly', 'ValidateCsrf']);
+$router->get('/companies/delete/{id}', 'CompanyController@delete', ['AuthOnly']);

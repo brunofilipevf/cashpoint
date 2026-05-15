@@ -171,7 +171,7 @@ class UserController
 
         $deleted = $this->user->delete($id);
 
-        if ($deleted === 23000) {
+        if ($deleted === '23000') {
             $this->session->setFlash('danger', 'Registro possui vínculos e não pode ser excluído');
             return $this->response->previous();
         }

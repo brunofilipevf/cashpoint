@@ -107,6 +107,9 @@ class Database
 
             return true;
         } catch (PDOException $e) {
+            if ($e->getCode() === '45001') {
+                return false;
+            }
             throw new RuntimeException("Erro ao executar atualização no banco de dados: " . $e->getMessage());
         }
     }

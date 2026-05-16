@@ -6,10 +6,11 @@ USE cashpoint;
 
 INSERT INTO `level` (name, hierarchy)
 VALUES
-    ('Administrador', 1),
-    ('Diretor', 2),
+    ('Administrador', 5),
+    ('Diretor', 4),
     ('Gerente', 3),
-    ('Supervisor', 4);
+    ('Supervisor', 2),
+    ('Operador', 1);
 
 -- =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 -- COMPANY VALUES

@@ -22,7 +22,11 @@ class User
 
     public function get($id)
     {
-        $sql = "SELECT * FROM `user` WHERE id = ? LIMIT 1";
+        $sql = "SELECT u.*, l.hierarchy
+                FROM `user` u
+                INNER JOIN `level` l ON u.level_id = l.id
+                WHERE u.id = ?
+                LIMIT 1";
         return $this->db->selectOne($sql, [$id]);
     }
 

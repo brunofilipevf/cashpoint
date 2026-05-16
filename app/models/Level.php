@@ -21,27 +21,4 @@ class Level
         $sql = "SELECT * FROM `level` WHERE id = ? LIMIT 1";
         return $this->db->selectOne($sql, [$id]);
     }
-
-    public function insert($data)
-    {
-        $columns = implode(', ', array_keys($data));
-        $placeholders = implode(', ', array_fill(0, count($data), '?'));
-        $sql = "INSERT INTO `level` ({$columns}) VALUES ({$placeholders})";
-        return $this->db->insert($sql, array_values($data));
-    }
-
-    public function update($data, $id)
-    {
-        $set = implode(' = ?, ', array_keys($data)) . ' = ?';
-        $sql = "UPDATE `level` SET {$set} WHERE id = ?";
-        $params = array_values($data);
-        $params[] = $id;
-        return $this->db->update($sql, $params);
-    }
-
-    public function delete($id)
-    {
-        $sql = "DELETE FROM `level` WHERE id = ?";
-        return $this->db->delete($sql, [$id]);
-    }
 }

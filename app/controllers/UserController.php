@@ -72,6 +72,19 @@ class UserController
             return $this->response->previous();
         }
 
+        # Obtém os dados do usuário autenticado
+        $authId = $this->session->get('auth.id');
+        $authUser = $this->user->get($authId);
+
+        # Obtém os dados do nível selecionado
+        $targetLevel = $this->level->get($data['level_id']);
+
+        # Impede atribuir um nível com hierarquia igual ou superior à do usuário autenticado
+        if ($authUser['hierarchy'] <= $targetLevel['hierarchy']) {
+            $this->session->setFlash('danger', 'Você não pode atribuir um nível igual ou superior ao seu');
+            return $this->response->previous();
+        }
+
         $inserted = $this->user->insert($data);
 
         if (!$inserted) {
@@ -110,6 +123,19 @@ class UserController
             return $this->response->previous();
         }
 
+        # Obtém os dados do usuário autenticado
+        $authId = $this->session->get('auth.id');
+        $authUser = $this->user->get($authId);
+
+        # Verifica se está editando um usuário diferente do seu
+        if ($authId !== (int) $id) {
+            # Impede editar um usuário com hierarquia igual ou superior à do usuário autenticado
+            if ($authUser['hierarchy'] <= $targetUser['hierarchy']) {
+                $this->session->setFlash('danger', 'Você não pode editar este usuário');
+                return $this->response->previous();
+            }
+        }
+
         $data = [
             'password' => $this->request->input('password'),
             'fullname' => $this->request->input('fullname'),
@@ -142,6 +168,24 @@ class UserController
             return $this->response->previous();
         }
 
+        # Impede o usuário autenticado de alterar seu próprio nível e status
+        if ($authId === (int) $id) {
+            $data['level_id'] = $authUser['level_id'];
+            $data['is_active'] = $authUser['is_active'];
+        }
+
+        # Verifica se está editando um usuário diferente do seu
+        if ($authId !== (int) $id) {
+            # Obtém os dados do nível selecionado
+            $targetLevel = $this->level->get($data['level_id']);
+
+            # Impede atribuir um nível com hierarquia igual ou superior à do usuário autenticado
+            if ($authUser['hierarchy'] <= $targetLevel['hierarchy']) {
+                $this->session->setFlash('danger', 'Você não pode atribuir um nível igual ou superior ao seu');
+                return $this->response->previous();
+            }
+        }
+
         $updated = $this->user->update($data, $id);
 
         if (!$updated) {
@@ -162,11 +206,23 @@ class UserController
             return $this->response->previous();
         }
 
+        # Obtém os dados do usuário autenticado
         $authId = $this->session->get('auth.id');
+        $authUser = $this->user->get($authId);
 
+        # Impede o usuário autenticado da auto-exclusão
         if ($authId === (int) $id) {
             $this->session->setFlash('danger', 'Não é possível excluir o próprio usuário');
             return $this->response->previous();
+        }
+
+        # Verifica se está excluindo um usuário diferente do seu
+        if ($authId !== (int) $id) {
+            # Impede excluir um usuário com hierarquia igual ou superior à do usuário autenticado
+            if ($authUser['hierarchy'] <= $targetUser['hierarchy']) {
+                $this->session->setFlash('danger', 'Você não pode excluir este usuário');
+                return $this->response->previous();
+            }
         }
 
         $deleted = $this->user->delete($id);

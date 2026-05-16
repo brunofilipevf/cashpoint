@@ -132,3 +132,18 @@ CREATE TABLE `redemption` (
     points_used DECIMAL(10,2) NOT NULL,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+
+-- =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+-- AUTH_SESSION
+-- =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+CREATE TABLE `auth_session` (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id INT UNSIGNED NOT NULL,
+    user_token CHAR(64) UNIQUE NOT NULL,
+    user_ip VARCHAR(45) NOT NULL,
+    user_agent TEXT NOT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT NULL,
+    revoked_at DATETIME DEFAULT NULL
+);

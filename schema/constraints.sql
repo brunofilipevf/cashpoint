@@ -117,3 +117,14 @@ FOREIGN KEY (user_id)
 REFERENCES `user`(id)
 ON DELETE RESTRICT
 ON UPDATE CASCADE;
+
+-- =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+-- AUTH_SESSION CONSTRAINTS
+-- =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+ALTER TABLE `auth_session`
+ADD CONSTRAINT fk_auth_session_user
+FOREIGN KEY (user_id)
+REFERENCES `user`(id)
+ON DELETE RESTRICT
+ON UPDATE CASCADE;

@@ -11,9 +11,7 @@ USE cashpoint;
 CREATE TABLE `level` (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(60) NOT NULL,
-    hierarchy TINYINT UNSIGNED UNIQUE NOT NULL,
-    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT NULL
+    hierarchy TINYINT UNSIGNED UNIQUE NOT NULL
 );
 
 -- =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=

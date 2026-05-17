@@ -42,11 +42,6 @@ $router->post('/users/edit/{id}', 'UserController@update', ['AuthOnly', 'Validat
 $router->get('/users/delete/{id}', 'UserController@delete', ['AuthOnly']);
 
 $router->get('/levels', 'LevelController@index', ['AuthOnly']);
-$router->get('/levels/add', 'LevelController@add', ['AuthOnly']);
-$router->post('/levels/add', 'LevelController@insert', ['AuthOnly', 'ValidateCsrf']);
-$router->get('/levels/edit/{id}', 'LevelController@edit', ['AuthOnly']);
-$router->post('/levels/edit/{id}', 'LevelController@update', ['AuthOnly', 'ValidateCsrf']);
-$router->get('/levels/delete/{id}', 'LevelController@delete', ['AuthOnly']);
 
 $router->get('/companies', 'CompanyController@index', ['AuthOnly']);
 $router->get('/companies/add', 'CompanyController@add', ['AuthOnly']);

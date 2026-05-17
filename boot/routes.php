@@ -6,6 +6,14 @@ $router->get('/login', 'AuthController@index', ['GuestOnly']);
 $router->post('/login', 'AuthController@login', ['GuestOnly', 'ValidateCsrf']);
 $router->get('/logout', 'AuthController@logout', ['AuthOnly']);
 
+$router->get('/scores', 'ScoreController@index', ['AuthOnly']);
+$router->get('/scores/add', 'ScoreController@add', ['AuthOnly']);
+$router->post('/scores/add', 'ScoreController@insert', ['AuthOnly', 'ValidateCsrf']);
+
+$router->get('/redemptions', 'RedemptionController@index', ['AuthOnly']);
+$router->get('/redemptions/add', 'RedemptionController@add', ['AuthOnly']);
+$router->post('/redemptions/add', 'RedemptionController@insert', ['AuthOnly', 'ValidateCsrf']);
+
 $router->get('/customers', 'CustomerController@index', ['AuthOnly']);
 $router->get('/customers/add', 'CustomerController@add', ['AuthOnly']);
 $router->post('/customers/add', 'CustomerController@insert', ['AuthOnly', 'ValidateCsrf']);

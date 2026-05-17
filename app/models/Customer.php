@@ -25,6 +25,12 @@ class Customer
         return $this->db->selectOne($sql, [$id]);
     }
 
+    public function getByCpf($cpf)
+    {
+        $sql = "SELECT * FROM `customer` WHERE cpf = ? LIMIT 1";
+        return $this->db->selectOne($sql, [$cpf]);
+    }
+
     public function insert($data)
     {
         $columns = implode(', ', array_keys($data));
@@ -46,5 +52,14 @@ class Customer
     {
         $sql = "DELETE FROM `customer` WHERE id = ?";
         return $this->db->delete($sql, [$id]);
+    }
+
+    public function getBalance($id)
+    {
+        # Calcula o saldo atual do cliente subtraindo os pontos utilizados dos pontos adquiridos
+        $sql = "SELECT (SELECT COALESCE(SUM(final_points), 0) FROM `score` WHERE customer_id = ?) -
+                (SELECT COALESCE(SUM(points_used), 0) FROM `redemption` WHERE customer_id = ?) AS balance";
+        $result = $this->db->selectOne($sql, [$id, $id]);
+        return (float) $result['balance'];
     }
 }

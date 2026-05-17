@@ -87,9 +87,11 @@ class CustomerController
         }
 
         $groups = $this->group->all();
+        $balance = $this->customer->getBalance($id);
         return $this->response->render('customer/edit', [
             'customer' => $targetCustomer,
-            'groups' => $groups
+            'groups' => $groups,
+            'balance' => $balance
         ]);
     }
 

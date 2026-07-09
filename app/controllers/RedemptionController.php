@@ -2,10 +2,10 @@
 
 namespace App\Controllers;
 
-use App\Models\{Award, Redemption};
+use App\Models\{Auth, Award, Redemption};
 use Core\{Database, Email, Request, Response, Session, Validator};
 
-class ScoreController
+class RedemptionController
 {
     public static function index()
     {
@@ -16,7 +16,7 @@ class ScoreController
 
     public static function add()
     {
-        Response::view('redemption/add' [
+        Response::view('redemption/add', [
             'awards' => Award::allAvailable()
         ]);
     }

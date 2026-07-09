@@ -30,13 +30,7 @@ class Award
         // Retorna apenas prêmios ativos e dentro da vigência
         // -------------------------------------------------------------------
 
-        $sql = "SELECT a.*, p.name AS product_name
-                FROM `award` a
-                INNER JOIN `product` p ON a.product_id = p.id
-                WHERE a.start_date <= NOW()
-                  AND a.end_date >= NOW()
-                  AND a.is_active = 1
-                ORDER BY a.id DESC";
+        $sql = "SELECT * FROM `award` WHERE start_date <= NOW() AND end_date >= NOW() AND is_active = 1 ORDER BY id DESC";
         return Database::selectAll($sql);
     }
 

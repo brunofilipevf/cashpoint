@@ -2,7 +2,7 @@
 
 namespace App\Controllers;
 
-use App\Models\{Award, Group, Product};
+use App\Models\{Award, Group, Product, Redemption};
 use Core\{Request, Response, Session, Validator};
 
 class AwardController

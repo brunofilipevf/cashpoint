@@ -86,7 +86,7 @@ class Database
     public static function existsInTables($id, $column, $tables = [])
     {
         foreach ($tables as $table) {
-            $sql = "SELECT COUNT(*) FROM `{$table}` WHERE {$column} = ?";
+            $sql = "SELECT COUNT(id) FROM `{$table}` WHERE {$column} = ?";
             $stmt = self::getConnection()->prepare($sql);
             $stmt->execute([$id]);
 

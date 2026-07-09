@@ -42,4 +42,18 @@ class Score
         $sql = "SELECT COUNT(id) FROM `score` WHERE customer_id = ? AND DATE(created_at) = CURDATE()";
         return Database::count($sql, [$customerId]);
     }
+
+    public static function getBalanceFromCustomer($customerId)
+    {
+        // -------------------------------------------------------------------
+        // Calcula saldo do cliente: total ganho, usado e saldo
+        // -------------------------------------------------------------------
+
+        $sql = "SELECT
+                (SELECT COALESCE(SUM(final_points), 0.00) FROM `score` WHERE customer_id = ?) as total_earned,
+                (SELECT COALESCE(SUM(points_used), 0.00) FROM `redemption` WHERE customer_id = ?) as total_used,
+                (SELECT COALESCE(SUM(final_points), 0.00) FROM `score` WHERE customer_id = ?) -
+                (SELECT COALESCE(SUM(points_used), 0.00) FROM `redemption` WHERE customer_id = ?) as balance";
+        return Database::selectOne($sql, [$customerId, $customerId, $customerId, $customerId]);
+    }
 }

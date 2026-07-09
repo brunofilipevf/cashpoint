@@ -45,6 +45,16 @@ class Award
         return Database::selectOne($sql, [$awardId]);
     }
 
+    public static function getForUpdate($awardId)
+    {
+        // -------------------------------------------------------------------
+        // Busca prêmio com lock para transações
+        // -------------------------------------------------------------------
+
+        $sql = "SELECT * FROM `award` WHERE id = ? LIMIT 1 FOR UPDATE";
+        return Database::selectOne($sql, [$awardId]);
+    }
+
     public static function insert($data)
     {
         // -------------------------------------------------------------------

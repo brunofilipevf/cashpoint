@@ -28,6 +28,7 @@ class Environment
                 if ($currentKey === $key) {
                     $value = trim($parts[1]);
                     $value = trim($value, '"\'');
+                    $value = str_replace('\n', PHP_EOL, $value);
                     return $value;
                 }
             }

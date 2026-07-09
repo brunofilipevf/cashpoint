@@ -167,6 +167,26 @@ CREATE TABLE `score` (
 ) ENGINE=InnoDB;
 
 -- =========================================================
+-- RESGATES
+-- =========================================================
+
+CREATE TABLE `redemption` (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    transaction_code CHAR(32) UNIQUE NOT NULL,
+    customer_id INT UNSIGNED NOT NULL,
+    award_id INT UNSIGNED NOT NULL,
+    product_id INT UNSIGNED NOT NULL,
+    points_used DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+    user_id INT UNSIGNED NOT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT chk_redemption_points_used_min CHECK (points_used >= 0.00),
+    CONSTRAINT fk_redemption_customer FOREIGN KEY (customer_id) REFERENCES `customer`(id) ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT fk_redemption_award FOREIGN KEY (award_id) REFERENCES `award`(id) ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT fk_redemption_product FOREIGN KEY (product_id) REFERENCES `product`(id) ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT fk_redemption_user FOREIGN KEY (user_id) REFERENCES `user`(id) ON DELETE RESTRICT ON UPDATE CASCADE
+) ENGINE=InnoDB;
+
+-- =========================================================
 -- SESSÕES ATIVAS DE USUÁRIOS
 -- =========================================================
 

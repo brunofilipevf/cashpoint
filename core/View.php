@@ -140,7 +140,6 @@ class View
                 'currency' => self::formatCurrency($value),
                 'date' => self::formatDate($value, $param),
                 'document' => self::formatDocument($value, $param),
-                'yes_or_no' => self::formatYesOrNo($value),
                 default => throw new \RuntimeException("[View] Formato não encontrado para '{$name}'")
             };
         }
@@ -187,14 +186,5 @@ class View
             14 => preg_replace('/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/', '$1.$2.$3/$4-$5', $clean),
             default => $value
         };
-    }
-
-    private static function formatYesOrNo($value)
-    {
-        if ((int) $value !== 1) {
-            return 'Não';
-        }
-
-        return 'Sim';
     }
 }

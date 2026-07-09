@@ -163,7 +163,7 @@ class UserController
             Response::redirect('/users/edit/' . $userId);
         }
 
-        if (Database::existsInTables($userId, 'user_id', ['activity'])) {
+        if (Database::existsInTables($userId, 'user_id', ['activity', 'score', 'redemption'])) {
             Session::setFlash('danger', 'Não é possível excluir este usuário');
             Response::redirect('/users/edit/' . $userId);
         }

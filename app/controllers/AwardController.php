@@ -153,6 +153,13 @@ class AwardController
         $requestData['start_date'] .= ' 00:00:00';
         $requestData['end_date'] .= ' 23:59:59';
 
+        if (Redemption::countByAward($awardData['id']) > 0) {
+            $requestData['name'] = $awardData['name'];
+            $requestData['product_id'] = $awardData['product_id'];
+            $requestData['required_points'] = $awardData['required_points'];
+            $requestData['group_id'] = $awardData['group_id'];
+        }
+
         Award::update($requestData, $awardId);
         Session::setFlash('success', 'Premiação atualizada com sucesso');
         Response::redirect('/awards');
@@ -164,6 +171,11 @@ class AwardController
 
         if (!$awardData) {
             Response::abort(404);
+        }
+
+        if (Database::existsInTables($awardId, 'award_id', ['redemption'])) {
+            Session::setFlash('danger', 'Não é possível excluir esta premiação');
+            Response::redirect('/awards/edit/' . $awardId);
         }
 
         Award::delete($awardId);

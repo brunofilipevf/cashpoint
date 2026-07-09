@@ -32,6 +32,8 @@ class Router
 
     public static function dispatch()
     {
+        Throttle::handle();
+
         $method = Request::method();
         $uri = Request::uri();
 

@@ -99,7 +99,7 @@ class ProductController
             Response::abort(404);
         }
 
-        if (Database::existsInTables($productId, 'product_id', ['award'])) {
+        if (Database::existsInTables($productId, 'product_id', ['award', 'redemption'])) {
             Session::setFlash('danger', 'Não é possível excluir este produto');
             Response::redirect('/products/edit/' . $productId);
         }

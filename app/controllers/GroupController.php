@@ -99,7 +99,7 @@ class GroupController
             Response::abort(404);
         }
 
-        if (Database::existsInTables($groupId, 'group_id', ['award', 'customer'])) {
+        if (Database::existsInTables($groupId, 'group_id', ['customer', 'award'])) {
             Session::setFlash('danger', 'Não é possível excluir este grupo');
             Response::redirect('/groups/edit/' . $groupId);
         }

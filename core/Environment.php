@@ -6,10 +6,10 @@ class Environment
 {
     public static function get($key)
     {
-        $file = __DIR__ . '/../.environment';
+        $file = __DIR__ . '/../.env';
 
         if (!file_exists($file)) {
-            throw new \RuntimeException('[Environment] Arquivo .environment não encontrado');
+            throw new \RuntimeException('[Environment] Arquivo .env não encontrado');
         }
 
         $lines = file($file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);

@@ -28,8 +28,8 @@ class Activity
     {
         // -------------------------------------------------------------------
         // Valida se o token existe, não foi revogado, está dentro
-        // dos 15 minutos e o usuário está ativo. Se válido, renova
-        // o timestamp de atividade.
+        // dos 15 minutos e o usuário está ativo.
+        // Se válido, renova o timestamp de atividade.
         // -------------------------------------------------------------------
 
         $hashedToken = hash('sha256', $token);

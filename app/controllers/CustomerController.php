@@ -117,6 +117,11 @@ class CustomerController
             Response::abort(404);
         }
 
+        if (Database::existsInTables($customerId, 'customer_id', ['score', 'redemption'])) {
+            Session::setFlash('danger', 'Não é possível excluir este cliente');
+            Response::redirect('/customers/edit/' . $customerId);
+        }
+
         Customer::delete($customerId);
         Session::setFlash('success', 'Cliente excluído com sucesso');
         Response::redirect('/customers');

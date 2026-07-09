@@ -9,10 +9,15 @@ class Award
     public static function all()
     {
         // -------------------------------------------------------------------
-        // Retorna todos os prêmios com nome do produto
+        // Retorna todos os prêmios com nome do produto.
+        // Se expirado, retorna is_active = 0 automaticamente.
         // -------------------------------------------------------------------
 
-        $sql = "SELECT a.*, p.name AS product_name
+        $sql = "SELECT a.*, p.name AS product_name,
+                    CASE
+                        WHEN a.is_active = 1 AND a.end_date < NOW() THEN 0
+                        ELSE a.is_active
+                    END AS is_active
                 FROM `award` a
                 INNER JOIN `product` p ON a.product_id = p.id
                 ORDER BY a.id DESC";

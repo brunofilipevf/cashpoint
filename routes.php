@@ -20,13 +20,22 @@ Core\Router::get('/logout', 'AuthController@logout', ['AuthOnly']);
 
 /*
 |--------------------------------------------------------------------------
+| Abastecimentos
+|--------------------------------------------------------------------------
+*/
+
+Core\Router::get('/supplies{page}', 'SupplyController@index', ['AuthOnly:1']);
+Core\Router::get('/supplies/show/{id}', 'SupplyController@show', ['AuthOnly:1']);
+
+/*
+|--------------------------------------------------------------------------
 | Pontuações
 |--------------------------------------------------------------------------
 */
 
 Core\Router::get('/scores{page}', 'ScoreController@index', ['AuthOnly:1']);
-Core\Router::get('/scores/add', 'ScoreController@add', ['AuthOnly:2']);
-Core\Router::post('/scores/add', 'ScoreController@insert', ['VerifyCsrf', 'AuthOnly:2']);
+Core\Router::get('/scores/add', 'ScoreController@add', ['AuthOnly:1']);
+Core\Router::post('/scores/add', 'ScoreController@insert', ['VerifyCsrf', 'AuthOnly:1']);
 
 /*
 |--------------------------------------------------------------------------
@@ -45,8 +54,8 @@ Core\Router::post('/redemptions/add', 'RedemptionController@insert', ['VerifyCsr
 */
 
 Core\Router::get('/customers{page}', 'CustomerController@index', ['AuthOnly:1']);
-Core\Router::get('/customers/add', 'CustomerController@add', ['AuthOnly:2']);
-Core\Router::post('/customers/add', 'CustomerController@insert', ['VerifyCsrf', 'AuthOnly:2']);
+Core\Router::get('/customers/add', 'CustomerController@add', ['AuthOnly:1']);
+Core\Router::post('/customers/add', 'CustomerController@insert', ['VerifyCsrf', 'AuthOnly:1']);
 Core\Router::get('/customers/edit/{id}', 'CustomerController@edit', ['AuthOnly:2']);
 Core\Router::post('/customers/edit/{id}', 'CustomerController@update', ['VerifyCsrf', 'AuthOnly:2']);
 Core\Router::get('/customers/delete/{id}', 'CustomerController@delete', ['AuthOnly:3']);
@@ -89,6 +98,16 @@ Core\Router::post('/products/add', 'ProductController@insert', ['VerifyCsrf', 'A
 Core\Router::get('/products/edit/{id}', 'ProductController@edit', ['AuthOnly:3']);
 Core\Router::post('/products/edit/{id}', 'ProductController@update', ['VerifyCsrf', 'AuthOnly:3']);
 Core\Router::get('/products/delete/{id}', 'ProductController@delete', ['AuthOnly:3']);
+
+/*
+|--------------------------------------------------------------------------
+| Frentistas
+|--------------------------------------------------------------------------
+*/
+
+Core\Router::get('/attendants{page}', 'AttendantController@index', ['AuthOnly:2']);
+Core\Router::get('/attendants/edit/{id}', 'AttendantController@edit', ['AuthOnly:3']);
+Core\Router::post('/attendants/edit/{id}', 'AttendantController@update', ['VerifyCsrf', 'AuthOnly:3']);
 
 /*
 |--------------------------------------------------------------------------

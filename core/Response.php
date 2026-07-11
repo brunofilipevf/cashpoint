@@ -12,6 +12,14 @@ class Response
         exit($content);
     }
 
+    public static function json($data, $statusCode = 200)
+    {
+        http_response_code($statusCode);
+        header('Content-Type: application/json; charset=UTF-8');
+        self::getHeaders();
+        exit(json_encode($data));
+    }
+
     public static function view($path, $data = [], $statusCode = 200)
     {
         http_response_code($statusCode);

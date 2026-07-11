@@ -6,7 +6,7 @@ use Core\Database;
 
 class Auth
 {
-    private static $userData = [];
+    private static $data = [];
 
     public static function login($username, $password)
     {
@@ -30,7 +30,7 @@ class Auth
         // Armazena dados do usuário para a requisição atual
         // -------------------------------------------------------------------
 
-        self::$userData = $data;
+        self::$data = $data;
     }
 
     public static function stored()
@@ -39,6 +39,6 @@ class Auth
         // Retorna os dados do usuário autenticado
         // -------------------------------------------------------------------
 
-        return self::$userData;
+        return self::$data;
     }
 }

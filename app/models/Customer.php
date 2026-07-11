@@ -29,14 +29,14 @@ class Customer
         return Database::selectOne($sql, [$customerId]);
     }
 
-    public static function getByCpfForUpdate($customerCpf)
+    public static function getByCpfForUpdate($cpf)
     {
         // -------------------------------------------------------------------
-        // Busca cliente por CPF com lock para transações
+        // Busca um cliente pelo CPF com lock para transações
         // -------------------------------------------------------------------
 
         $sql = "SELECT * FROM `customer` WHERE cpf = ? LIMIT 1 FOR UPDATE";
-        return Database::selectOne($sql, [$customerCpf]);
+        return Database::selectOne($sql, [$cpf]);
     }
 
     public static function insert($data)

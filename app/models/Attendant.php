@@ -4,70 +4,70 @@ namespace App\Models;
 
 use Core\Database;
 
-class Company
+class Attendant
 {
     public static function all()
     {
         // -------------------------------------------------------------------
-        // Retorna todas as empresas ordenadas por ID
+        // Retorna todos os frentistas ordenados por ID
         // -------------------------------------------------------------------
 
-        $sql = "SELECT * FROM `company` ORDER BY id DESC";
+        $sql = "SELECT * FROM `attendant` ORDER BY id DESC";
         return Database::selectAll($sql);
     }
 
-    public static function get($companyId)
+    public static function get($attendantId)
     {
         // -------------------------------------------------------------------
-        // Busca uma empresa pelo ID
+        // Busca um frentista pelo ID
         // -------------------------------------------------------------------
 
-        $sql = "SELECT * FROM `company` WHERE id = ? LIMIT 1";
-        return Database::selectOne($sql, [$companyId]);
+        $sql = "SELECT * FROM `attendant` WHERE id = ? LIMIT 1";
+        return Database::selectOne($sql, [$attendantId]);
     }
 
-    public static function getByCpf($cpf)
+    public static function exist($rfid)
     {
         // -------------------------------------------------------------------
-        // Busca uma empresa pelo CPF
+        // Verifica se um frentista existe pelo RFID
         // -------------------------------------------------------------------
 
-        $sql = "SELECT * FROM `company` WHERE cpf = ? LIMIT 1";
-        return Database::selectOne($sql, [$cpf]);
+        $sql = "SELECT 1 FROM `attendant` WHERE rfid = ? LIMIT 1";
+        return Database::exist($sql, [$rfid]);
     }
 
     public static function insert($data)
     {
         // -------------------------------------------------------------------
-        // Insere uma nova empresa e retorna o ID gerado
+        // Insere um novo frentista e retorna o ID gerado
         // -------------------------------------------------------------------
 
         $columns = implode(', ', array_keys($data));
         $placeholders = implode(', ', array_fill(0, count($data), '?'));
-        $sql = "INSERT INTO `company` ({$columns}, created_at) VALUES ({$placeholders}, NOW())";
+        $sql = "INSERT INTO `attendant` ({$columns}, created_at) VALUES ({$placeholders}, NOW())";
         return Database::insert($sql, array_values($data));
     }
 
-    public static function update($data, $companyId)
+    public static function update($data, $attendantId)
     {
         // -------------------------------------------------------------------
-        // Atualiza uma empresa existente pelo ID
+        // Atualiza um frentista existente pelo ID
         // -------------------------------------------------------------------
 
         $set = implode(' = ?, ', array_keys($data)) . ' = ?';
-        $sql = "UPDATE `company` SET {$set}, updated_at = NOW() WHERE id = ?";
+        $sql = "UPDATE `attendant` SET {$set}, updated_at = NOW() WHERE id = ?";
         $params = array_values($data);
-        $params[] = $companyId;
+        $params[] = $attendantId;
         return Database::update($sql, $params);
     }
 
-    public static function delete($companyId)
+    public static function delete($attendantId)
     {
         // -------------------------------------------------------------------
-        // Remove uma empresa do banco pelo ID
+        // Remove um frentista do banco pelo ID
         // -------------------------------------------------------------------
 
-        $sql = "DELETE FROM `company` WHERE id = ?";
-        return Database::delete($sql, [$companyId]);
+        $sql = "DELETE FROM `attendant` WHERE id = ?";
+        return Database::delete($sql, [$attendantId]);
     }
 }

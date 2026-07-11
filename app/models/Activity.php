@@ -14,7 +14,7 @@ class Activity
 
         $token = bin2hex(random_bytes(32));
         $hashedToken = hash('sha256', $token);
-        $sql = "INSERT INTO `activity` (user_id, token, user_ip, created_at, updated_at)
+        $sql = "INSERT INTO `activity` (user_id, token, ip, created_at, updated_at)
                 VALUES (?, ?, ?, NOW(), NOW())";
 
         if (!Database::insert($sql, [$userId, $hashedToken, $ip])) {

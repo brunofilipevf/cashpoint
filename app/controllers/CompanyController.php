@@ -96,7 +96,7 @@ class CompanyController
             Response::abort(404);
         }
 
-        if (Database::existsInTables($companyId, 'company_id', ['user'])) {
+        if (Database::existsInTables($companyId, 'company_id', ['user', 'supply'])) {
             Session::setFlash('danger', 'Não é possível excluir esta empresa');
             Response::redirect('/companies/edit/' . $companyId);
         }

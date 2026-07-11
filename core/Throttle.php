@@ -4,7 +4,7 @@ namespace Core;
 
 class Throttle
 {
-    public static function handle($maxRequests = 60, $windowSeconds = 60)
+    public static function handle($maxRequests = 40, $windowSeconds = 60)
     {
         $file = __DIR__ . '/../storage/throttle.tmp';
         $ip = Request::ip();

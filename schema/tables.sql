@@ -14,13 +14,6 @@ CREATE TABLE `level` (
     hierarchy TINYINT UNSIGNED UNIQUE NOT NULL
 ) ENGINE=InnoDB;
 
-INSERT INTO `level` (name, hierarchy)
-VALUES ('Administrador', 255),
-       ('Diretor', 4),
-       ('Gerente', 3),
-       ('Supervisor', 2),
-       ('Operador', 1);
-
 -- =========================================================
 -- EMPRESAS
 -- =========================================================
@@ -33,10 +26,6 @@ CREATE TABLE `company` (
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT NULL
 ) ENGINE=InnoDB;
-
-INSERT INTO `company` (cpf, name)
-VALUES ('08072308000669', 'Posto Cruzeiro VII'),
-       ('08072308000316', 'Posto Cruzeiro IV');
 
 -- =========================================================
 -- USUÁRIOS
@@ -51,15 +40,8 @@ CREATE TABLE `user` (
     company_id INT UNSIGNED DEFAULT NULL,
     is_active TINYINT UNSIGNED NOT NULL DEFAULT 1,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT NULL,
-    CONSTRAINT fk_user_level FOREIGN KEY (level_id) REFERENCES `level`(id) ON DELETE RESTRICT ON UPDATE CASCADE,
-    CONSTRAINT fk_user_company FOREIGN KEY (company_id) REFERENCES `company`(id) ON DELETE RESTRICT ON UPDATE CASCADE
+    updated_at DATETIME DEFAULT NULL
 ) ENGINE=InnoDB;
-
-INSERT INTO `user` (username, password, fullname, level_id)
-VALUES ('admin', '$2y$10$DYw2kb5QjPOeb5QLqBp6XutGq0QkF/dV9dB234bdZ6Oqr73.f3hvi', 'Administrador do Sistema', 1 ),
-       ('wladimir', '$2y$10$DYw2kb5QjPOeb5QLqBp6XutGq0QkF/dV9dB234bdZ6Oqr73.f3hvi', 'Wladimir Neves da Costa', 3),
-       ('bruno', '$2y$10$DYw2kb5QjPOeb5QLqBp6XutGq0QkF/dV9dB234bdZ6Oqr73.f3hvi', 'Bruno Freitas', 4 );
 
 -- =========================================================
 -- GRUPOS
@@ -71,14 +53,8 @@ CREATE TABLE `group` (
     multiplier_factor DECIMAL(10,2) NOT NULL DEFAULT 1.00,
     is_active TINYINT UNSIGNED NOT NULL DEFAULT 1,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT NULL,
-    CONSTRAINT chk_multiplier_factor_min CHECK (multiplier_factor >= 0.00)
+    updated_at DATETIME DEFAULT NULL
 ) ENGINE=InnoDB;
-
-INSERT INTO `group` (name, multiplier_factor, is_active)
-VALUES ('Funcionários', 1.5, 1),
-       ('Motoristas de aplicativo', 1.5, 1),
-       ('Atiaia Renovaveis', 1.3, 0);
 
 -- =========================================================
 -- CLIENTES
@@ -93,15 +69,8 @@ CREATE TABLE `customer` (
     group_id INT UNSIGNED DEFAULT NULL,
     is_active TINYINT UNSIGNED NOT NULL DEFAULT 1,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT NULL,
-    CONSTRAINT fk_customer_group FOREIGN KEY (group_id) REFERENCES `group`(id) ON DELETE RESTRICT ON UPDATE CASCADE
+    updated_at DATETIME DEFAULT NULL
 ) ENGINE=InnoDB;
-
-INSERT INTO `customer` (cpf, fullname, group_id)
-VALUES ('11122233344', 'Ailly Mayane de Brito Nunes', 1),
-       ('17823975315', NULL, NULL),
-       ('22779955042', NULL, 2),
-       ('15975324860', 'José Gilmar de Freitas', NULL);
 
 -- =========================================================
 -- PRODUTOS
@@ -115,10 +84,6 @@ CREATE TABLE `product` (
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT NULL
 ) ENGINE=InnoDB;
-
-INSERT INTO `product` (name, barcode)
-VALUES ('Refri Coca Cola Lata 350ml', '1234567890123'),
-       ('Salg Coxinha de Frango', '3650');
 
 -- =========================================================
 -- PREMIAÇÕES
@@ -136,14 +101,8 @@ CREATE TABLE `award` (
     end_date DATETIME NOT NULL,
     is_active TINYINT UNSIGNED NOT NULL DEFAULT 1,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT NULL,
-    CONSTRAINT chk_required_points_min CHECK (required_points >= 0.00),
-    CONSTRAINT fk_award_product FOREIGN KEY (product_id) REFERENCES `product`(id) ON DELETE RESTRICT ON UPDATE CASCADE,
-    CONSTRAINT fk_award_group FOREIGN KEY (group_id) REFERENCES `group`(id) ON DELETE RESTRICT ON UPDATE CASCADE
+    updated_at DATETIME DEFAULT NULL
 ) ENGINE=InnoDB;
-
-INSERT INTO `award` (name, product_id, required_points, max_redemption_total, max_redemption_per_customer, start_date, end_date)
-VALUES ('Troque 800 pontos por uma Coca-Cola Lata 350ml', 1, 800.00, 1000, 2, '2026-05-01 00:00:00', '2026-05-31 23:59:59');
 
 -- =========================================================
 -- PONTUAÇÕES
@@ -158,12 +117,8 @@ CREATE TABLE `score` (
     final_points DECIMAL(10,2) NOT NULL DEFAULT 0.00,
     user_id INT UNSIGNED NOT NULL,
     is_manual TINYINT UNSIGNED NOT NULL DEFAULT 1,
-    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT chk_score_base_points_min CHECK (base_points >= 0.00),
-    CONSTRAINT chk_score_multiplier_factor_min CHECK (multiplier_factor >= 0.00),
-    CONSTRAINT chk_score_final_points_min CHECK (final_points >= 0.00),
-    CONSTRAINT fk_score_customer FOREIGN KEY (customer_id) REFERENCES `customer`(id) ON DELETE RESTRICT ON UPDATE CASCADE,
-    CONSTRAINT fk_score_user FOREIGN KEY (user_id) REFERENCES `user`(id) ON DELETE RESTRICT ON UPDATE CASCADE
+    supply_id INT UNSIGNED UNIQUE DEFAULT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
 -- =========================================================
@@ -178,12 +133,7 @@ CREATE TABLE `redemption` (
     product_id INT UNSIGNED NOT NULL,
     points_used DECIMAL(10,2) NOT NULL DEFAULT 0.00,
     user_id INT UNSIGNED NOT NULL,
-    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT chk_redemption_points_used_min CHECK (points_used >= 0.00),
-    CONSTRAINT fk_redemption_customer FOREIGN KEY (customer_id) REFERENCES `customer`(id) ON DELETE RESTRICT ON UPDATE CASCADE,
-    CONSTRAINT fk_redemption_award FOREIGN KEY (award_id) REFERENCES `award`(id) ON DELETE RESTRICT ON UPDATE CASCADE,
-    CONSTRAINT fk_redemption_product FOREIGN KEY (product_id) REFERENCES `product`(id) ON DELETE RESTRICT ON UPDATE CASCADE,
-    CONSTRAINT fk_redemption_user FOREIGN KEY (user_id) REFERENCES `user`(id) ON DELETE RESTRICT ON UPDATE CASCADE
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
 -- =========================================================
@@ -194,9 +144,38 @@ CREATE TABLE `activity` (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     user_id INT UNSIGNED NOT NULL,
     token CHAR(64) UNIQUE NOT NULL,
-    user_ip VARCHAR(45) NOT NULL,
+    ip VARCHAR(45) NOT NULL,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT NULL,
-    revoked_at DATETIME DEFAULT NULL,
-    CONSTRAINT fk_activity_user FOREIGN KEY (user_id) REFERENCES `user`(id) ON DELETE RESTRICT ON UPDATE CASCADE
+    revoked_at DATETIME DEFAULT NULL
+) ENGINE=InnoDB;
+
+-- =========================================================
+-- ABASTECIMENTOS
+-- =========================================================
+
+CREATE TABLE `supply` (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    company_id INT UNSIGNED NOT NULL,
+    codigo INT UNSIGNED NOT NULL,
+    bico TINYINT UNSIGNED NOT NULL,
+    product_id INT UNSIGNED NOT NULL,
+    quantidade DECIMAL(10,3) NOT NULL DEFAULT 0.00,
+    preco_unit DECIMAL(10,3) NOT NULL DEFAULT 0.00,
+    valor DECIMAL(10,3) NOT NULL DEFAULT 0.00,
+    hora DATETIME NOT NULL,
+    attendant_id INT UNSIGNED NOT NULL,
+    ip VARCHAR(45) NOT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+-- =========================================================
+-- FRENTISTAS
+-- =========================================================
+
+CREATE TABLE `attendant` (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    rfid CHAR(16) UNIQUE NOT NULL,
+    fullname VARCHAR(60) DEFAULT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;

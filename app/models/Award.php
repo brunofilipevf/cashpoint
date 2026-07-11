@@ -30,7 +30,12 @@ class Award
         // Retorna apenas prêmios ativos e dentro da vigência
         // -------------------------------------------------------------------
 
-        $sql = "SELECT * FROM `award` WHERE start_date <= NOW() AND end_date >= NOW() AND is_active = 1 ORDER BY id DESC";
+        $sql = "SELECT *
+                FROM `award`
+                WHERE start_date <= NOW()
+                  AND end_date >= NOW()
+                  AND is_active = 1
+                ORDER BY id DESC";
         return Database::selectAll($sql);
     }
 
@@ -47,7 +52,7 @@ class Award
     public static function getForUpdate($awardId)
     {
         // -------------------------------------------------------------------
-        // Busca prêmio com lock para transações
+        // Busca um prêmio pelo ID com lock para transações
         // -------------------------------------------------------------------
 
         $sql = "SELECT * FROM `award` WHERE id = ? LIMIT 1 FOR UPDATE";

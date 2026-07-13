@@ -53,7 +53,7 @@ VALUES ('11122233344', 'Ailly Mayane de Brito Nunes', 1),
 
 INSERT INTO `product` (name, barcode)
 VALUES ('Refri Coca Cola Lata 350ml', '1234567890123'),
-       ('Salg Coxinha de Frango', '3650');
+       ('Salg Coxinha de Frango', '1905');
 
 -- =========================================================
 -- VALORES: PREMIAÇÕES

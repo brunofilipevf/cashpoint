@@ -89,22 +89,6 @@ class Request
             return [];
         }
 
-        $normalized = [];
-
-        foreach ($data as $key => $value) {
-            if (!is_string($value)) {
-                continue;
-            }
-
-            $value = trim($value);
-
-            if ($value === '') {
-                $value = null;
-            }
-
-            $normalized[$key] = $value;
-        }
-
-        return $normalized;
+        return $data;
     }
 }

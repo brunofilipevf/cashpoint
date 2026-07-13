@@ -49,7 +49,6 @@ class SupplyController
 
         if ($token === null || !hash_equals(API_TOKEN, $token)) {
             Response::json(['fail', 'Token inválido'], 401);
-            return;
         }
 
         // -------------------------------------------------------------------
@@ -64,19 +63,16 @@ class SupplyController
 
         if ($companyDocument === null) {
             Response::json(['fail', 'CPF/CNPJ da empresa não informado'], 400);
-            return;
         }
 
         $companyData = Company::getByCpf($companyDocument);
 
         if (!$companyData) {
             Response::json(['fail', 'Empresa não encontrada'], 404);
-            return;
         }
 
         if ($companyData['is_active'] !== 1) {
             Response::json(['fail', 'Empresa inativa'], 403);
-            return;
         }
 
         // -------------------------------------------------------------------
@@ -87,14 +83,12 @@ class SupplyController
 
         if (!isset($input['supply'])) {
             Response::json(['fail', 'Nenhum abastecimento enviado'], 400);
-            return;
         }
 
         $supply = $input['supply'];
 
         if (Supply::exist($companyData['id'], $supply['codigo'])) {
             Response::json(['fail', 'Abastecimento já enviado anteriormente'], 409);
-            return;
         }
 
         // -------------------------------------------------------------------
@@ -108,36 +102,39 @@ class SupplyController
             // Busca ou cadastra o produto pelo código de barras
             // ---------------------------------------------------------------
 
-            $productData = Product::getByBarcodeForUpdate($supply['produto_codigo_barra']);
+            $attendantData = Attendant::getByRfidForUpdate($supply['rfid_cartao']);
 
-            if (!$productData) {
-                $productData['id'] = Product::insert([
-                    'name' => $supply['produto_nome'],
-                    'barcode' => $supply['produto_codigo_barra']
+            if (!$attendantData) {
+                $attendantId = Attendant::insert([
+                    'rfid' => $supply['rfid_cartao']
                 ]);
 
-                if (!$productData['id']) {
+                if (!$attendantId) {
                     Database::rollBack();
-                    Response::json(['fail', 'Erro ao adicionar produto'], 500);
+                    Response::json(['fail', 'Erro ao adicionar frentista'], 500);
                 }
+
+                $attendantData = ['id' => $attendantId];
             }
 
             // ---------------------------------------------------------------
             // Busca ou cadastra o frentista pelo RFID
             // ---------------------------------------------------------------
 
-            $attendantData = Attendant::getByRfidForUpdate($supply['rfid']);
+            $productData = Product::getByBarcodeForUpdate($supply['produto_codigo_barra']);
 
-            if (!$attendantData) {
-                $attendantData['id'] = Attendant::insert([
-                    'rfid' => $supply['rfid']
+            if (!$productData) {
+                $productId = Product::insert([
+                    'name' => $supply['produto_nome'],
+                    'barcode' => $supply['produto_codigo_barra']
                 ]);
 
-                if (!$attendantData['id']) {
+                if (!$productId) {
                     Database::rollBack();
-                    Response::json(['fail', 'Erro ao adicionar frentista'], 500);
-                    return;
+                    Response::json(['fail', 'Erro ao adicionar produto'], 500);
                 }
+
+                $productData = ['id' => $productId];
             }
 
             // ---------------------------------------------------------------
@@ -153,7 +150,8 @@ class SupplyController
                 'preco_unit' => $supply['preco_unit'],
                 'valor' => $supply['valor'],
                 'hora' => $supply['hora'],
-                'attendant_id' => $attendantData['id']
+                'attendant_id' => $attendantData['id'],
+                'ip' => Request::ip()
             ];
 
             // ---------------------------------------------------------------
@@ -164,12 +162,13 @@ class SupplyController
             Database::commit();
             Response::json(['success', 'Abastecimento adicionado com sucesso'], 201);
 
-        } catch (\Exception) {
+        } catch (\Exception $e) {
             // ---------------------------------------------------------------
             // Reverte a transação em caso de erro
             // ---------------------------------------------------------------
 
             Database::rollBack();
+            error_log((string) $e);
             Response::json(['fail', 'Erro ao adicionar abastecimento'], 500);
         }
     }

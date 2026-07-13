@@ -26,7 +26,7 @@ class Product
         return Database::selectOne($sql, [$productId]);
     }
 
-    public static function getByBarcode($barcode)
+    public static function getByBarcodeForUpdate($barcode)
     {
         // -------------------------------------------------------------------
         // Busca um produto pelo código de barras com lock para transações

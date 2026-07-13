@@ -26,7 +26,7 @@ class Attendant
         return Database::selectOne($sql, [$attendantId]);
     }
 
-    public static function getByRfid($rfid)
+    public static function getByRfidForUpdate($rfid)
     {
         // -------------------------------------------------------------------
         // Busca um frentista pelo RFID com lock para transações

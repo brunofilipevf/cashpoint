@@ -26,14 +26,14 @@ class Attendant
         return Database::selectOne($sql, [$attendantId]);
     }
 
-    public static function exist($rfid)
+    public static function getByRfid($rfid)
     {
         // -------------------------------------------------------------------
-        // Verifica se um frentista existe pelo RFID
+        // Busca um frentista pelo RFID com lock para transações
         // -------------------------------------------------------------------
 
-        $sql = "SELECT 1 FROM `attendant` WHERE rfid = ? LIMIT 1";
-        return Database::exist($sql, [$rfid]);
+        $sql = "SELECT * FROM `attendant` WHERE rfid = ? LIMIT 1 FOR UPDATE";
+        return Database::selectOne($sql, [$rfid]);
     }
 
     public static function insert($data)

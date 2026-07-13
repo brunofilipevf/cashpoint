@@ -6,14 +6,19 @@ use Core\Database;
 
 class Supply
 {
-    public static function all()
+    public static function all($companyId)
     {
         // -------------------------------------------------------------------
-        // Retorna todos os abastecimentos ordenados por ID
+        // Retorna todos os abastecimentos da empresa com produto e frentista
         // -------------------------------------------------------------------
 
-        $sql = "SELECT * FROM `supply` ORDER BY id DESC";
-        return Database::selectAll($sql);
+        $sql = "SELECT s.*, p.name AS product_name, a.fullname AS attendant_fullname
+                FROM `supply` s
+                INNER JOIN `product` p ON s.product_id = p.id
+                INNER JOIN `attendant` a ON s.attendant_id = a.id
+                WHERE company_id = ?
+                ORDER BY s.id DESC";
+        return Database::selectAll($sql, [$companyId]);
     }
 
     public static function get($supplyId)

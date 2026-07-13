@@ -26,6 +26,7 @@ Core\Router::get('/logout', 'AuthController@logout', ['AuthOnly']);
 
 Core\Router::get('/supplies{page}', 'SupplyController@index', ['AuthOnly:1']);
 Core\Router::get('/supplies/show/{id}', 'SupplyController@show', ['AuthOnly:1']);
+Core\Router::post('/api/supplies/add', 'SupplyController@insert', []);
 
 /*
 |--------------------------------------------------------------------------

@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Models\Attendant;
+use Core\{Request, Response, Session, Validator};
 
 class AttendantController
 {

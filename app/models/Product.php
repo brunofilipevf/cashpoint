@@ -26,6 +26,16 @@ class Product
         return Database::selectOne($sql, [$productId]);
     }
 
+    public static function getByBarcode($barcode)
+    {
+        // -------------------------------------------------------------------
+        // Busca um produto pelo código de barras com lock para transações
+        // -------------------------------------------------------------------
+
+        $sql = "SELECT * FROM `product` WHERE barcode = ? LIMIT 1 FOR UPDATE";
+        return Database::selectOne($sql, [$barcode]);
+    }
+
     public static function insert($data)
     {
         // -------------------------------------------------------------------

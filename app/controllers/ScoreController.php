@@ -52,34 +52,48 @@ class ScoreController
             Response::redirect('same_uri');
         }
 
+        // -------------------------------------------------------------------
+        // Inicia transação para garantir consistência
+        // -------------------------------------------------------------------
+
         Database::beginTransaction();
 
-        $customerData = Customer::getByCpfForUpdate($requestData['cpf']);
+        try {
+            $customerData = Customer::getByCpfForUpdate($requestData['cpf']);
 
-        if ($customerData['is_active'] !== 1) {
+            if ($customerData['is_active'] !== 1) {
+                Database::rollBack();
+                Session::setFlash('danger', 'Cliente inativo');
+                Response::redirect('same_uri');
+            }
+
+            $dailyCount = Score::countDailyByCustomer($customerData['id']);
+
+            if ($dailyCount >= MAX_DAILY_LIMIT_POINTS_PER_CUSTOMER) {
+                Database::rollBack();
+                Session::setFlash('danger', 'Limite máximo de pontuação diaria por cliente atingido');
+                Response::redirect('same_uri');
+            }
+
+            $dataToBeSaved = [
+                'transaction_code' => bin2hex(random_bytes(16)),
+                'customer_id' => $customerData['id'],
+                'base_points' => $requestData['points'],
+                'final_points' => $requestData['points'],
+                'user_id' => $authorizingUserId
+            ];
+
+            Score::insert($dataToBeSaved);
+            Database::commit();
+
+        } catch (\Exception) {
+            // ---------------------------------------------------------------
+            // Reverte a transação em caso de erro
+            // ---------------------------------------------------------------
+
             Database::rollBack();
-            Session::setFlash('danger', 'Cliente inativo');
-            Response::redirect('same_uri');
+            Response::json(['fail', 'Erro ao adicionar abastecimento'], 500);
         }
-
-        $dailyCount = Score::countDailyByCustomer($customerData['id']);
-
-        if ($dailyCount >= MAX_DAILY_LIMIT_POINTS_PER_CUSTOMER) {
-            Database::rollBack();
-            Session::setFlash('danger', 'Limite máximo de pontuação diaria por cliente atingido');
-            Response::redirect('same_uri');
-        }
-
-        $dataToBeSaved = [
-            'transaction_code' => bin2hex(random_bytes(16)),
-            'customer_id' => $customerData['id'],
-            'base_points' => $requestData['points'],
-            'final_points' => $requestData['points'],
-            'user_id' => $authorizingUserId
-        ];
-
-        Score::insert($dataToBeSaved);
-        Database::commit();
 
         if ($customerData['email']) {
             $subject = 'Pontos Creditados - ' . APP_NAME;

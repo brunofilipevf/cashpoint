@@ -80,7 +80,7 @@ class AwardController
 
     public static function edit($awardId)
     {
-        $awardData = Award::get($awardId);
+        $awardData = Award::find($awardId);
 
         if (!$awardData) {
             Response::abort(404);
@@ -95,7 +95,7 @@ class AwardController
 
     public static function update($awardId)
     {
-        $awardData = Award::get($awardId);
+        $awardData = Award::find($awardId);
 
         if (!$awardData) {
             Response::abort(404);
@@ -167,7 +167,7 @@ class AwardController
 
     public static function delete($awardId)
     {
-        $awardData = Award::get($awardId);
+        $awardData = Award::find($awardId);
 
         if (!$awardData) {
             Response::abort(404);

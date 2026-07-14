@@ -8,10 +8,6 @@ class Activity
 {
     public static function create($userId, $ip)
     {
-        // -------------------------------------------------------------------
-        // Gera token aleatório e armazena hash no banco
-        // -------------------------------------------------------------------
-
         $token = bin2hex(random_bytes(32));
         $hashedToken = hash('sha256', $token);
         $sql = "INSERT INTO `activity` (user_id, token, ip, created_at, updated_at)
@@ -26,12 +22,6 @@ class Activity
 
     public static function verify($token)
     {
-        // -------------------------------------------------------------------
-        // Valida se o token existe, não foi revogado, está dentro
-        // dos 15 minutos e o usuário está ativo.
-        // Se válido, renova o timestamp de atividade.
-        // -------------------------------------------------------------------
-
         $hashedToken = hash('sha256', $token);
         $sql = "SELECT a.user_id
                 FROM `activity` a
@@ -56,12 +46,9 @@ class Activity
 
     public static function revoke($token)
     {
-        // -------------------------------------------------------------------
-        // Revoga o token preenchendo a data de revogação
-        // -------------------------------------------------------------------
-
         $hashedToken = hash('sha256', $token);
         $sql = "UPDATE `activity` SET revoked_at = NOW() WHERE token = ?";
+
         return Database::update($sql, [$hashedToken]);
     }
 }

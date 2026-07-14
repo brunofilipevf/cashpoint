@@ -16,7 +16,7 @@ class AttendantController
 
     public static function edit($attendantId)
     {
-        $attendantData = Attendant::get($attendantId);
+        $attendantData = Attendant::find($attendantId);
 
         if (!$attendantData) {
             Response::abort(404);

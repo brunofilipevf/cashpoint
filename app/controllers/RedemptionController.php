@@ -3,7 +3,7 @@
 namespace App\Controllers;
 
 use App\Models\{Auth, Award, Redemption};
-use Core\{Database, Email, Request, Response, Session, Validator};
+use Core\{Database, Request, Response, Session, Validator};
 
 class RedemptionController
 {
@@ -43,14 +43,11 @@ class RedemptionController
             Response::redirect('same_uri');
         }
 
-        // -------------------------------------------------------------------
-        // Inicia transação para garantir consistência
-        // -------------------------------------------------------------------
-
         Database::beginTransaction();
 
         try {
-            $customerData = Customer::getByCpfForUpdate($requestData['cpf']);
+
+            $customerData = Customer::findByCpfForUpdate($requestData['cpf']);
 
             if ($customerData['is_active'] !== 1) {
                 Database::rollBack();
@@ -58,7 +55,7 @@ class RedemptionController
                 Response::redirect('same_uri');
             }
 
-            $awardData = Award::getForUpdate($requestData['award_id']);
+            $awardData = Award::findForUpdate($requestData['award_id']);
 
             if ($awardData['is_active'] !== 1) {
                 Database::rollBack();
@@ -90,7 +87,7 @@ class RedemptionController
                 Response::redirect('same_uri');
             }
 
-            $balanceData = Score::getBalanceFromCustomer($customerData['id']);
+            $balanceData = Score::findBalanceFromCustomer($customerData['id']);
 
             if ($balanceData['balance'] < $awardData['required_points']) {
                 Database::rollBack();
@@ -110,30 +107,9 @@ class RedemptionController
             Redemption::insert($dataToBeSaved);
             Database::commit();
 
-        } catch (\PDOException) {
-            // ---------------------------------------------------------------
-            // Reverte a transação em caso de erro
-            // ---------------------------------------------------------------
-
+        } catch (\Exception) {
             Database::rollBack();
-            Response::json(['fail', 'Erro ao adicionar abastecimento'], 500);
-        }
-
-        if ($customerData['email']) {
-            $subject = 'Resgate de Premiação - ' . APP_NAME;
-            $customerName = 'Cliente';
-
-            if ($customerData['fullname']) {
-                $customerName = $customerData['fullname'];
-            }
-
-            Email::send($customerData['email'], $subject, sprintf(
-                EMAIL_REWARD_REDEEMED,
-                $customerName,
-                $awardData['name'],
-                $dataToBeSaved['points_used'],
-                $dataToBeSaved['transaction_code']
-            ));
+            Session::setFlash('danger', 'Erro ao registrar resgate');
         }
 
         Session::setFlash('success', 'Resgate registrado com sucesso');

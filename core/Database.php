@@ -48,7 +48,11 @@ class Database
             return (int) self::getConnection()->lastInsertId();
         }
 
-        return false;
+        if (self::getConnection()->inTransaction()) {
+            self::rollBack();
+        }
+
+        throw new \PDOException('Erro ao inserir registro, nenhuma linha foi afetada');
     }
 
     public static function update($sql, $param = [])

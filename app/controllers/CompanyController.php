@@ -46,7 +46,7 @@ class CompanyController
 
     public static function edit($companyId)
     {
-        $companyData = Company::get($companyId);
+        $companyData = Company::find($companyId);
 
         if (!$companyData) {
             Response::abort(404);
@@ -59,7 +59,7 @@ class CompanyController
 
     public static function update($companyId)
     {
-        $companyData = Company::get($companyId);
+        $companyData = Company::find($companyId);
 
         if (!$companyData) {
             Response::abort(404);
@@ -90,13 +90,13 @@ class CompanyController
 
     public static function delete($companyId)
     {
-        $companyData = Company::get($companyId);
+        $companyData = Company::find($companyId);
 
         if (!$companyData) {
             Response::abort(404);
         }
 
-        if (Database::existsInTables($companyId, 'company_id', ['user', 'supply'])) {
+        if (Database::existsInTables($companyId, 'company_id', ['supply', 'user'])) {
             Session::setFlash('danger', 'Não é possível excluir esta empresa');
             Response::redirect('/companies/edit/' . $companyId);
         }

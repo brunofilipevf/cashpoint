@@ -57,7 +57,7 @@ class CustomerController
 
     public static function edit($customerId)
     {
-        $customerData = Customer::get($customerId);
+        $customerData = Customer::find($customerId);
 
         if (!$customerData) {
             Response::abort(404);
@@ -71,7 +71,7 @@ class CustomerController
 
     public static function update($customerId)
     {
-        $customerData = Customer::get($customerId);
+        $customerData = Customer::find($customerId);
 
         if (!$customerData) {
             Response::abort(404);
@@ -111,13 +111,13 @@ class CustomerController
 
     public static function delete($customerId)
     {
-        $customerData = Customer::get($customerId);
+        $customerData = Customer::find($customerId);
 
         if (!$customerData) {
             Response::abort(404);
         }
 
-        if (Database::existsInTables($customerId, 'customer_id', ['score', 'redemption'])) {
+        if (Database::existsInTables($customerId, 'customer_id', ['redemption', 'score'])) {
             Session::setFlash('danger', 'Não é possível excluir este cliente');
             Response::redirect('/customers/edit/' . $customerId);
         }

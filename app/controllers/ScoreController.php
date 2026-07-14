@@ -3,7 +3,7 @@
 namespace App\Controllers;
 
 use App\Models\{Auth, Customer, Score};
-use Core\{Database, Email, Request, Response, Session, Validator};
+use Core\{Database, Request, Response, Session, Validator};
 
 class ScoreController
 {
@@ -52,14 +52,11 @@ class ScoreController
             Response::redirect('same_uri');
         }
 
-        // -------------------------------------------------------------------
-        // Inicia transação para garantir consistência
-        // -------------------------------------------------------------------
-
         Database::beginTransaction();
 
         try {
-            $customerData = Customer::getByCpfForUpdate($requestData['cpf']);
+
+            $customerData = Customer::findByCpfForUpdate($requestData['cpf']);
 
             if ($customerData['is_active'] !== 1) {
                 Database::rollBack();
@@ -87,28 +84,8 @@ class ScoreController
             Database::commit();
 
         } catch (\Exception) {
-            // ---------------------------------------------------------------
-            // Reverte a transação em caso de erro
-            // ---------------------------------------------------------------
-
             Database::rollBack();
-            Response::json(['fail', 'Erro ao adicionar abastecimento'], 500);
-        }
-
-        if ($customerData['email']) {
-            $subject = 'Pontos Creditados - ' . APP_NAME;
-            $customerName = 'Cliente';
-
-            if ($customerData['fullname']) {
-                $customerName = $customerData['fullname'];
-            }
-
-            Email::send($customerData['email'], $subject, sprintf(
-                EMAIL_POINTS_CREDITED,
-                $customerName,
-                $dataToBeSaved['final_points'],
-                $dataToBeSaved['transaction_code']
-            ));
+            Session::setFlash('danger', 'Erro ao registrar pontuação');
         }
 
         Session::setFlash('success', 'Pontuação registrada com sucesso');

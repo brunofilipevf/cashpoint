@@ -23,7 +23,7 @@ class AuthOnly
             Response::redirect('/login');
         }
 
-        $authUserData = User::get($authUserId);
+        $authUserData = User::find($authUserId);
 
         if (!$authUserData) {
             Session::destroy();

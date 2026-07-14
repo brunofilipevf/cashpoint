@@ -53,7 +53,7 @@ class UserController
             Response::redirect('same_uri');
         }
 
-        $levelData = Level::get($requestData['level_id']);
+        $levelData = Level::find($requestData['level_id']);
 
         if ($authUserData['hierarchy'] <= $levelData['hierarchy']) {
             Session::setFlash('danger', 'Você não pode atribuir um nível igual ou superior ao seu');
@@ -67,7 +67,7 @@ class UserController
 
     public static function edit($userId)
     {
-        $userData = User::get($userId);
+        $userData = User::find($userId);
 
         if (!$userData) {
             Response::abort(404);
@@ -82,7 +82,7 @@ class UserController
 
     public static function update($userId)
     {
-        $userData = User::get($userId);
+        $userData = User::find($userId);
 
         if (!$userData) {
             Response::abort(404);
@@ -130,7 +130,7 @@ class UserController
         }
 
         if ($authUserData['id'] !== $userId) {
-            $levelData = Level::get($requestData['level_id']);
+            $levelData = Level::find($requestData['level_id']);
 
             if ($authUserData['hierarchy'] <= $levelData['hierarchy']) {
                 Session::setFlash('danger', 'Você não pode atribuir um nível igual ou superior ao seu');
@@ -145,7 +145,7 @@ class UserController
 
     public static function delete($userId)
     {
-        $userData = User::get($userId);
+        $userData = User::find($userId);
 
         if (!$userData) {
             Response::abort(404);
@@ -163,7 +163,7 @@ class UserController
             Response::redirect('/users/edit/' . $userId);
         }
 
-        if (Database::existsInTables($userId, 'user_id', ['activity', 'score', 'redemption'])) {
+        if (Database::existsInTables($userId, 'user_id', ['activity', 'redemption', 'score'])) {
             Session::setFlash('danger', 'Não é possível excluir este usuário');
             Response::redirect('/users/edit/' . $userId);
         }

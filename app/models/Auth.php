@@ -10,10 +10,6 @@ class Auth
 
     public static function login($username, $password)
     {
-        // -------------------------------------------------------------------
-        // Busca usuário ativo e verifica a senha
-        // -------------------------------------------------------------------
-
         $sql = "SELECT id, password FROM `user` WHERE username = ? AND is_active = 1 LIMIT 1";
         $user = Database::selectOne($sql, [$username]);
 
@@ -26,19 +22,11 @@ class Auth
 
     public static function store($data)
     {
-        // -------------------------------------------------------------------
-        // Armazena dados do usuário para a requisição atual
-        // -------------------------------------------------------------------
-
         self::$data = $data;
     }
 
     public static function stored()
     {
-        // -------------------------------------------------------------------
-        // Retorna os dados do usuário autenticado
-        // -------------------------------------------------------------------
-
         return self::$data;
     }
 }

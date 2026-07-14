@@ -46,7 +46,7 @@ class ProductController
 
     public static function edit($productId)
     {
-        $productData = Product::get($productId);
+        $productData = Product::find($productId);
 
         if (!$productData) {
             Response::abort(404);
@@ -59,7 +59,7 @@ class ProductController
 
     public static function update($productId)
     {
-        $productData = Product::get($productId);
+        $productData = Product::find($productId);
 
         if (!$productData) {
             Response::abort(404);
@@ -93,7 +93,7 @@ class ProductController
 
     public static function delete($productId)
     {
-        $productData = Product::get($productId);
+        $productData = Product::find($productId);
 
         if (!$productData) {
             Response::abort(404);

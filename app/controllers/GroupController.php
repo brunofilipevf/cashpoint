@@ -46,7 +46,7 @@ class GroupController
 
     public static function edit($groupId)
     {
-        $groupData = Group::get($groupId);
+        $groupData = Group::find($groupId);
 
         if (!$groupData) {
             Response::abort(404);
@@ -59,7 +59,7 @@ class GroupController
 
     public static function update($groupId)
     {
-        $groupData = Group::get($groupId);
+        $groupData = Group::find($groupId);
 
         if (!$groupData) {
             Response::abort(404);
@@ -93,13 +93,13 @@ class GroupController
 
     public static function delete($groupId)
     {
-        $groupData = Group::get($groupId);
+        $groupData = Group::find($groupId);
 
         if (!$groupData) {
             Response::abort(404);
         }
 
-        if (Database::existsInTables($groupId, 'group_id', ['customer', 'award'])) {
+        if (Database::existsInTables($groupId, 'group_id', ['award', 'customer'])) {
             Session::setFlash('danger', 'Não é possível excluir este grupo');
             Response::redirect('/groups/edit/' . $groupId);
         }

@@ -2,24 +2,30 @@
 
 namespace App\Controllers;
 
-use App\Models\{Activity, Auth};
-use Core\{Request, Response, Session, Validator};
-
 class AuthController
 {
-    public static function index()
+    public function __construct(
+        private \App\Models\Activity $activity,
+        private \App\Models\Auth $auth,
+        private \Core\Request $request,
+        private \Core\Response $response,
+        private \Core\Session $session,
+        private \Core\Validator $validator
+    ) {}
+
+    public function index()
     {
-        Response::view('auth/index');
+        $this->response->view('auth/index');
     }
 
-    public static function login()
+    public function login()
     {
         $requestData = [
-            'username' => Request::input('username'),
-            'password' => Request::input('password')
+            'username' => $this->request->post('username'),
+            'password' => $this->request->post('password')
         ];
 
-        $errors = Validator::fields($requestData, [
+        $errors = $this->validator->fields($requestData, [
             'username' => 'required|string',
             'password' => 'required|string'
         ], [
@@ -28,34 +34,33 @@ class AuthController
         ]);
 
         if ($errors) {
-            Session::setFlash('danger', $errors);
-            Response::redirect('same_uri');
+            $this->session->setFlash('danger', $errors);
+            $this->response->redirect('same_uri');
         }
 
-        $authUserId = Auth::login($requestData['username'], $requestData['password']);
+        $authUserId = $this->auth->login($requestData['username'], $requestData['password']);
 
         if (!$authUserId) {
-            Session::setFlash('danger', 'Credenciais inválidas ou usuário inativo');
-            Response::redirect('same_uri');
+            $this->session->setFlash('danger', 'Credenciais inválidas ou usuário inativo');
+            $this->response->redirect('same_uri');
         }
 
-        $ip = Request::ip();
-        $authToken = Activity::create($authUserId, $ip);
+        $authToken = $this->activity->create($authUserId, $this->request->ip());
 
-        Session::regenerate();
-        Session::set('auth.token', $authToken);
-        Response::redirect('/');
+        $this->session->regenerate();
+        $this->session->set('auth.token', $authToken);
+        $this->response->redirect('/');
     }
 
-    public static function logout()
+    public function logout()
     {
-        $authToken = Session::get('auth.token');
+        $authToken = $this->session->get('auth.token');
 
         if ($authToken) {
-            Activity::revoke($authToken);
+            $this->activity->revoke($authToken);
         }
 
-        Session::destroy();
-        Response::redirect('/login');
+        $this->session->destroy();
+        $this->response->redirect('/login');
     }
 }

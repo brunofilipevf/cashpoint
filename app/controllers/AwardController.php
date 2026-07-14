@@ -2,40 +2,49 @@
 
 namespace App\Controllers;
 
-use App\Models\{Award, Group, Product, Redemption};
-use Core\{Request, Response, Session, Validator};
-
 class AwardController
 {
-    public static function index()
+    public function __construct(
+        private \App\Models\Award $award,
+        private \App\Models\Group $group,
+        private \App\Models\Product $product,
+        private \App\Models\Redemption $redemption,
+        private \Core\Database $database,
+        private \Core\Request $request,
+        private \Core\Response $response,
+        private \Core\Session $session,
+        private \Core\Validator $validator
+    ) {}
+
+    public function index()
     {
-        Response::view('award/index', [
-            'awards' => Award::all()
+        $this->response->view('award/index', [
+            'awards' => $this->award->all()
         ]);
     }
 
-    public static function add()
+    public function add()
     {
-        Response::view('award/add', [
-            'products' => Product::all(),
-            'groups' => Group::all()
+        $this->response->view('award/add', [
+            'products' => $this->product->all(),
+            'groups' => $this->group->all()
         ]);
     }
 
-    public static function insert()
+    public function insert()
     {
         $requestData = [
-            'name' => Request::input('name'),
-            'product_id' => Request::input('product_id'),
-            'required_points' => Request::input('required_points'),
-            'max_redemption_total' => Request::input('max_redemption_total'),
-            'max_redemption_per_customer' => Request::input('max_redemption_per_customer'),
-            'group_id' => Request::input('group_id'),
-            'start_date' => Request::input('start_date'),
-            'end_date' => Request::input('end_date')
+            'name' => $this->request->post('name'),
+            'product_id' => $this->request->post('product_id'),
+            'required_points' => $this->request->post('required_points'),
+            'max_redemption_total' => $this->request->post('max_redemption_total'),
+            'max_redemption_per_customer' => $this->request->post('max_redemption_per_customer'),
+            'group_id' => $this->request->post('group_id'),
+            'start_date' => $this->request->post('start_date'),
+            'end_date' => $this->request->post('end_date')
         ];
 
-        $errors = Validator::fields($requestData, [
+        $errors = $this->validator->fields($requestData, [
             'name' => 'required|string|max:60',
             'product_id' => 'required|integer|exist:product,id',
             'required_points' => 'required|numeric|min:0.01',
@@ -56,64 +65,64 @@ class AwardController
         ]);
 
         if ($errors) {
-            Session::setFlash('danger', $errors);
-            Response::redirect('same_uri');
+            $this->session->setFlash('danger', $errors);
+            $this->response->redirect('same_uri');
         }
 
         if ($requestData['max_redemption_per_customer'] > $requestData['max_redemption_total']) {
-            Session::setFlash('danger', 'O limite de resgate por cliente não pode ser maior que o limite total de resgate');
-            Response::redirect('same_uri');
+            $this->session->setFlash('danger', 'O limite de resgate por cliente não pode ser maior que o limite total de resgate');
+            $this->response->redirect('same_uri');
         }
 
         if ($requestData['end_date'] < $requestData['start_date']) {
-            Session::setFlash('danger', 'A data de término não pode ser anterior à data de início');
-            Response::redirect('same_uri');
+            $this->session->setFlash('danger', 'A data de término não pode ser anterior à data de início');
+            $this->response->redirect('same_uri');
         }
 
         $requestData['start_date'] .= ' 00:00:00';
         $requestData['end_date'] .= ' 23:59:59';
 
-        Award::insert($requestData);
-        Session::setFlash('success', 'Premiação adicionada com sucesso');
-        Response::redirect('/awards');
+        $this->award->insert($requestData);
+        $this->session->setFlash('success', 'Premiação adicionada com sucesso');
+        $this->response->redirect('/awards');
     }
 
-    public static function edit($awardId)
+    public function edit($awardId)
     {
-        $awardData = Award::find($awardId);
+        $awardData = $this->award->find($awardId);
 
         if (!$awardData) {
-            Response::abort(404);
+            $this->response->abort(404);
         }
 
-        Response::view('award/edit', [
+        $this->response->view('award/edit', [
             'award' => $awardData,
-            'products' => Product::all(),
-            'groups' => Group::all()
+            'products' => $this->product->all(),
+            'groups' => $this->group->all()
         ]);
     }
 
-    public static function update($awardId)
+    public function update($awardId)
     {
-        $awardData = Award::find($awardId);
+        $awardData = $this->award->find($awardId);
 
         if (!$awardData) {
-            Response::abort(404);
+            $this->response->abort(404);
         }
 
         $requestData = [
-            'name' => Request::input('name'),
-            'product_id' => Request::input('product_id'),
-            'required_points' => Request::input('required_points'),
-            'max_redemption_total' => Request::input('max_redemption_total'),
-            'max_redemption_per_customer' => Request::input('max_redemption_per_customer'),
-            'group_id' => Request::input('group_id'),
-            'start_date' => Request::input('start_date'),
-            'end_date' => Request::input('end_date'),
-            'is_active' => Request::input('is_active')
+            'name' => $this->request->post('name'),
+            'product_id' => $this->request->post('product_id'),
+            'required_points' => $this->request->post('required_points'),
+            'max_redemption_total' => $this->request->post('max_redemption_total'),
+            'max_redemption_per_customer' => $this->request->post('max_redemption_per_customer'),
+            'group_id' => $this->request->post('group_id'),
+            'start_date' => $this->request->post('start_date'),
+            'end_date' => $this->request->post('end_date'),
+            'is_active' => $this->request->post('is_active')
         ];
 
-        $errors = Validator::fields($requestData, [
+        $errors = $this->validator->fields($requestData, [
             'name' => 'required|string|max:60',
             'product_id' => 'required|integer|exist:product,id',
             'required_points' => 'required|numeric|min:0.01',
@@ -136,50 +145,50 @@ class AwardController
         ]);
 
         if ($errors) {
-            Session::setFlash('danger', $errors);
-            Response::redirect('same_uri');
+            $this->session->setFlash('danger', $errors);
+            $this->response->redirect('same_uri');
         }
 
         if ($requestData['max_redemption_per_customer'] > $requestData['max_redemption_total']) {
-            Session::setFlash('danger', 'O limite de resgate por cliente não pode ser maior que o limite total de resgate');
-            Response::redirect('same_uri');
+            $this->session->setFlash('danger', 'O limite de resgate por cliente não pode ser maior que o limite total de resgate');
+            $this->response->redirect('same_uri');
         }
 
         if ($requestData['end_date'] < $requestData['start_date']) {
-            Session::setFlash('danger', 'A data de término não pode ser anterior à data de início');
-            Response::redirect('same_uri');
+            $this->session->setFlash('danger', 'A data de término não pode ser anterior à data de início');
+            $this->response->redirect('same_uri');
         }
 
         $requestData['start_date'] .= ' 00:00:00';
         $requestData['end_date'] .= ' 23:59:59';
 
-        if (Redemption::countByAward($awardData['id']) > 0) {
+        if ($this->redemption->countByAward($awardData['id']) > 0) {
             $requestData['name'] = $awardData['name'];
             $requestData['product_id'] = $awardData['product_id'];
             $requestData['required_points'] = $awardData['required_points'];
             $requestData['group_id'] = $awardData['group_id'];
         }
 
-        Award::update($requestData, $awardId);
-        Session::setFlash('success', 'Premiação atualizada com sucesso');
-        Response::redirect('/awards');
+        $this->award->update($requestData, $awardId);
+        $this->session->setFlash('success', 'Premiação atualizada com sucesso');
+        $this->response->redirect('/awards');
     }
 
-    public static function delete($awardId)
+    public function delete($awardId)
     {
-        $awardData = Award::find($awardId);
+        $awardData = $this->award->find($awardId);
 
         if (!$awardData) {
-            Response::abort(404);
+            $this->response->abort(404);
         }
 
-        if (Database::existsInTables($awardId, 'award_id', ['redemption'])) {
-            Session::setFlash('danger', 'Não é possível excluir esta premiação');
-            Response::redirect('/awards/edit/' . $awardId);
+        if ($this->database->existsInTables($awardId, 'award_id', ['redemption'])) {
+            $this->session->setFlash('danger', 'Não é possível excluir esta premiação');
+            $this->response->redirect('/awards/edit/' . $awardId);
         }
 
-        Award::delete($awardId);
-        Session::setFlash('success', 'Premiação excluída com sucesso');
-        Response::redirect('/awards');
+        $this->award->delete($awardId);
+        $this->session->setFlash('success', 'Premiação excluída com sucesso');
+        $this->response->redirect('/awards');
     }
 }

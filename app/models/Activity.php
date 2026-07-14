@@ -2,25 +2,26 @@
 
 namespace App\Models;
 
-use Core\Database;
-
 class Activity
 {
-    public static function create($userId, $ip)
+    public function __construct(
+        private \Core\Database $database
+    ) {}
+
+    public function create($userId, $ip)
     {
         $token = bin2hex(random_bytes(32));
         $hashedToken = hash('sha256', $token);
-        $sql = "INSERT INTO `activity` (user_id, token, ip, created_at, updated_at)
-                VALUES (?, ?, ?, NOW(), NOW())";
+        $sql = "INSERT INTO `activity` (user_id, token, ip, created_at, updated_at) VALUES (?, ?, ?, NOW(), NOW())";
 
-        if (!Database::insert($sql, [$userId, $hashedToken, $ip])) {
+        if (!$this->database->insert($sql, [$userId, $hashedToken, $ip])) {
             return false;
         }
 
         return $token;
     }
 
-    public static function verify($token)
+    public function verify($token)
     {
         $hashedToken = hash('sha256', $token);
         $sql = "SELECT a.user_id
@@ -32,23 +33,23 @@ class Activity
                   AND u.is_active = 1
                 LIMIT 1";
 
-        $activity = Database::selectOne($sql, [$hashedToken]);
+        $activity = $this->database->selectOne($sql, [$hashedToken]);
 
         if (!$activity) {
             return false;
         }
 
         $sql = "UPDATE `activity` SET updated_at = NOW() WHERE token = ?";
-        Database::update($sql, [$hashedToken]);
+        $this->database->update($sql, [$hashedToken]);
 
         return $activity['user_id'];
     }
 
-    public static function revoke($token)
+    public function revoke($token)
     {
         $hashedToken = hash('sha256', $token);
         $sql = "UPDATE `activity` SET revoked_at = NOW() WHERE token = ?";
 
-        return Database::update($sql, [$hashedToken]);
+        return $this->database->update($sql, [$hashedToken]);
     }
 }

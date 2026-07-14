@@ -2,24 +2,27 @@
 
 namespace App\Middlewares;
 
-use App\Models\Activity;
-use Core\{Response, Session};
-
 class GuestOnly
 {
-    public static function handle()
+    public function __construct(
+        private \App\Models\Activity $activity,
+        private \Core\Response $response,
+        private \Core\Session $session
+    ) {}
+
+    public function handle()
     {
-        $authToken = Session::get('auth.token');
+        $authToken = $this->session->get('auth.token');
 
         if ($authToken === null) {
             return;
         }
 
-        if (Activity::verify($authToken)) {
-            Response::redirect('/');
+        if ($this->activity->verify($authToken)) {
+            $this->response->redirect('/');
         }
 
-        Activity::revoke($authToken);
-        Session::destroy();
+        $this->activity->revoke($authToken);
+        $this->session->destroy();
     }
 }

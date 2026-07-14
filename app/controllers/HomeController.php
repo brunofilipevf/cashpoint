@@ -2,12 +2,14 @@
 
 namespace App\Controllers;
 
-use Core\Response;
-
 class HomeController
 {
-    public static function index()
+    public function __construct(
+        private \Core\Response $response
+    ) {}
+
+    public function index()
     {
-        Response::view('home/index');
+        $this->response->view('home/index');
     }
 }

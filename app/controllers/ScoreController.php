@@ -2,33 +2,41 @@
 
 namespace App\Controllers;
 
-use App\Models\{Auth, Customer, Score};
-use Core\{Database, Request, Response, Session, Validator};
-
 class ScoreController
 {
-    public static function index()
+    public function __construct(
+        private \App\Models\Auth $auth,
+        private \App\Models\Customer $customer,
+        private \App\Models\Score $score,
+        private \Core\Database $database,
+        private \Core\Request $request,
+        private \Core\Response $response,
+        private \Core\Session $session,
+        private \Core\Validator $validator
+    ) {}
+
+    public function index()
     {
-        Response::view('score/index', [
-            'scores' => Score::all()
+        $this->response->view('score/index', [
+            'scores' => $this->score->all()
         ]);
     }
 
-    public static function add()
+    public function add()
     {
-        Response::view('score/add');
+        $this->response->view('score/add');
     }
 
-    public static function insert()
+    public function insert()
     {
         $requestData = [
-            'username' => Request::input('username'),
-            'password' => Request::input('password'),
-            'cpf' => Request::input('cpf'),
-            'points' => Request::input('points')
+            'username' => $this->request->post('username'),
+            'password' => $this->request->post('password'),
+            'cpf' => $this->request->post('cpf'),
+            'points' => $this->request->post('points')
         ];
 
-        $errors = Validator::fields($requestData, [
+        $errors = $this->validator->fields($requestData, [
             'username' => 'required|string',
             'password' => 'required|string',
             'cpf' => 'required|document|exist:customer,cpf',
@@ -41,54 +49,46 @@ class ScoreController
         ]);
 
         if ($errors) {
-            Session::setFlash('danger', $errors);
-            Response::redirect('same_uri');
+            $this->session->setFlash('danger', $errors);
+            $this->response->redirect('same_uri');
         }
 
-        $authorizingUserId = Auth::login($requestData['username'], $requestData['password']);
+        $authorizingUserId = $this->auth->login($requestData['username'], $requestData['password']);
 
         if (!$authorizingUserId) {
-            Session::setFlash('danger', 'Credenciais inválidas ou usuário inativo');
-            Response::redirect('same_uri');
+            $this->session->setFlash('danger', 'Credenciais inválidas ou usuário inativo');
+            $this->response->redirect('same_uri');
         }
 
-        Database::beginTransaction();
+        $this->database->beginTransaction();
 
-        try {
+        $customerData = $this->customer->findByCpfForUpdate($requestData['cpf']);
 
-            $customerData = Customer::findByCpfForUpdate($requestData['cpf']);
-
-            if ($customerData['is_active'] !== 1) {
-                Database::rollBack();
-                Session::setFlash('danger', 'Cliente inativo');
-                Response::redirect('same_uri');
-            }
-
-            $dailyCount = Score::countDailyByCustomer($customerData['id']);
-
-            if ($dailyCount >= MAX_DAILY_LIMIT_POINTS_PER_CUSTOMER) {
-                Database::rollBack();
-                Session::setFlash('danger', 'Limite máximo de pontuação diaria por cliente atingido');
-                Response::redirect('same_uri');
-            }
-
-            $dataToBeSaved = [
-                'transaction_code' => bin2hex(random_bytes(16)),
-                'customer_id' => $customerData['id'],
-                'base_points' => $requestData['points'],
-                'final_points' => $requestData['points'],
-                'user_id' => $authorizingUserId
-            ];
-
-            Score::insert($dataToBeSaved);
-            Database::commit();
-
-        } catch (\Exception) {
-            Database::rollBack();
-            Session::setFlash('danger', 'Erro ao registrar pontuação');
+        if ($customerData['is_active'] !== 1) {
+            $this->database->rollBack();
+            $this->session->setFlash('danger', 'Cliente inativo');
+            $this->response->redirect('same_uri');
         }
 
-        Session::setFlash('success', 'Pontuação registrada com sucesso');
-        Response::redirect('/scores');
+        $dailyCount = $this->score->countDailyByCustomer($customerData['id']);
+
+        if ($dailyCount >= MAX_DAILY_LIMIT_POINTS_PER_CUSTOMER) {
+            $this->database->rollBack();
+            $this->session->setFlash('danger', 'Limite máximo de pontuação diaria por cliente atingido');
+            $this->response->redirect('same_uri');
+        }
+
+        $dataToBeSaved = [
+            'transaction_code' => bin2hex(random_bytes(16)),
+            'customer_id' => $customerData['id'],
+            'base_points' => $requestData['points'],
+            'final_points' => $requestData['points'],
+            'user_id' => $authorizingUserId
+        ];
+
+        $this->score->insert($dataToBeSaved);
+        $this->database->commit();
+        $this->session->setFlash('success', 'Pontuação registrada com sucesso');
+        $this->response->redirect('/scores');
     }
 }

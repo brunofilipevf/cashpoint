@@ -2,54 +2,48 @@
 
 namespace App\Models;
 
-use Core\Database;
-
 class Product
 {
-    public static function all()
-    {
-        $sql = "SELECT * FROM `product` ORDER BY id DESC";
+    public function __construct(
+        private \Core\Database $database
+    ) {}
 
-        return Database::selectAll($sql);
+    public function all()
+    {
+        return $this->database->selectAll("SELECT * FROM `product` ORDER BY id DESC");
     }
 
-    public static function find($productId)
+    public function find($productId)
     {
-        $sql = "SELECT * FROM `product` WHERE id = ? LIMIT 1";
-
-        return Database::selectOne($sql, [$productId]);
+        return $this->database->selectOne("SELECT * FROM `product` WHERE id = ? LIMIT 1", [$productId]);
     }
 
-    public static function findByBarcodeForUpdate($barcode)
+    public function findByBarcodeForUpdate($barcode)
     {
-        $sql = "SELECT * FROM `product` WHERE barcode = ? LIMIT 1 FOR UPDATE";
-
-        return Database::selectOne($sql, [$barcode]);
+        return $this->database->selectOne("SELECT * FROM `product` WHERE barcode = ? LIMIT 1 FOR UPDATE", [$barcode]);
     }
 
-    public static function insert($data)
+    public function insert($data)
     {
         $columns = implode(', ', array_keys($data));
         $placeholders = implode(', ', array_fill(0, count($data), '?'));
         $sql = "INSERT INTO `product` ({$columns}, created_at) VALUES ({$placeholders}, NOW())";
 
-        return Database::insert($sql, array_values($data));
+        return $this->database->insert($sql, array_values($data));
     }
 
-    public static function update($data, $productId)
+    public function update($data, $productId)
     {
         $set = implode(' = ?, ', array_keys($data)) . ' = ?';
         $sql = "UPDATE `product` SET {$set}, updated_at = NOW() WHERE id = ?";
         $params = array_values($data);
         $params[] = $productId;
 
-        return Database::update($sql, $params);
+        return $this->database->update($sql, $params);
     }
 
-    public static function delete($productId)
+    public function delete($productId)
     {
-        $sql = "DELETE FROM `product` WHERE id = ?";
-
-        return Database::delete($sql, [$productId]);
+        return $this->database->delete("DELETE FROM `product` WHERE id = ?", [$productId]);
     }
 }

@@ -2,31 +2,37 @@
 
 namespace App\Controllers;
 
-use App\Models\Company;
-use Core\{Database, Request, Response, Session, Validator};
-
 class CompanyController
 {
-    public static function index()
+    public function __construct(
+        private \App\Models\Company $company,
+        private \Core\Database $database,
+        private \Core\Request $request,
+        private \Core\Response $response,
+        private \Core\Session $session,
+        private \Core\Validator $validator
+    ) {}
+
+    public function index()
     {
-        Response::view('company/index', [
-            'companies' => Company::all()
+        $this->response->view('company/index', [
+            'companies' => $this->company->all()
         ]);
     }
 
-    public static function add()
+    public function add()
     {
-        Response::view('company/add');
+        $this->response->view('company/add');
     }
 
-    public static function insert()
+    public function insert()
     {
         $requestData = [
-            'cpf' => Request::input('cpf'),
-            'name' => Request::input('name')
+            'cpf' => $this->request->post('cpf'),
+            'name' => $this->request->post('name')
         ];
 
-        $errors = Validator::fields($requestData, [
+        $errors = $this->validator->fields($requestData, [
             'cpf' => 'required|document|unique:company,cpf',
             'name' => 'required|string|max:60'
         ], [
@@ -35,42 +41,42 @@ class CompanyController
         ]);
 
         if ($errors) {
-            Session::setFlash('danger', $errors);
-            Response::redirect('same_uri');
+            $this->session->setFlash('danger', $errors);
+            $this->response->redirect('same_uri');
         }
 
-        Company::insert($requestData);
-        Session::setFlash('success', 'Empresa adicionada com sucesso');
-        Response::redirect('/companies');
+        $this->company->insert($requestData);
+        $this->session->setFlash('success', 'Empresa adicionada com sucesso');
+        $this->response->redirect('/companies');
     }
 
-    public static function edit($companyId)
+    public function edit($companyId)
     {
-        $companyData = Company::find($companyId);
+        $companyData = $this->company->find($companyId);
 
         if (!$companyData) {
-            Response::abort(404);
+            $this->response->abort(404);
         }
 
-        Response::view('company/edit', [
+        $this->response->view('company/edit', [
             'company' => $companyData
         ]);
     }
 
-    public static function update($companyId)
+    public function update($companyId)
     {
-        $companyData = Company::find($companyId);
+        $companyData = $this->company->find($companyId);
 
         if (!$companyData) {
-            Response::abort(404);
+            $this->response->abort(404);
         }
 
         $requestData = [
-            'name' => Request::input('name'),
-            'is_active' => Request::input('is_active')
+            'name' => $this->request->post('name'),
+            'is_active' => $this->request->post('is_active')
         ];
 
-        $errors = Validator::fields($requestData, [
+        $errors = $this->validator->fields($requestData, [
             'name' => 'required|string|max:60',
             'is_active' => 'required|in:0,1'
         ], [
@@ -79,30 +85,30 @@ class CompanyController
         ]);
 
         if ($errors) {
-            Session::setFlash('danger', $errors);
-            Response::redirect('same_uri');
+            $this->session->setFlash('danger', $errors);
+            $this->response->redirect('same_uri');
         }
 
-        Company::update($requestData, $companyId);
-        Session::setFlash('success', 'Empresa atualizada com sucesso');
-        Response::redirect('/companies');
+        $this->company->update($requestData, $companyId);
+        $this->session->setFlash('success', 'Empresa atualizada com sucesso');
+        $this->response->redirect('/companies');
     }
 
-    public static function delete($companyId)
+    public function delete($companyId)
     {
-        $companyData = Company::find($companyId);
+        $companyData = $this->company->find($companyId);
 
         if (!$companyData) {
-            Response::abort(404);
+            $this->response->abort(404);
         }
 
-        if (Database::existsInTables($companyId, 'company_id', ['supply', 'user'])) {
-            Session::setFlash('danger', 'Não é possível excluir esta empresa');
-            Response::redirect('/companies/edit/' . $companyId);
+        if ($this->database->existsInTables($companyId, 'company_id', ['supply', 'user'])) {
+            $this->session->setFlash('danger', 'Não é possível excluir esta empresa');
+            $this->response->redirect('/companies/edit/' . $companyId);
         }
 
-        Company::delete($companyId);
-        Session::setFlash('success', 'Empresa excluída com sucesso');
-        Response::redirect('/companies');
+        $this->company->delete($companyId);
+        $this->session->setFlash('success', 'Empresa excluída com sucesso');
+        $this->response->redirect('/companies');
     }
 }

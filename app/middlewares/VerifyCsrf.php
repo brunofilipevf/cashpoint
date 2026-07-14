@@ -2,18 +2,22 @@
 
 namespace App\Middlewares;
 
-use Core\{Request, Response, Session};
-
 class VerifyCsrf
 {
-    public static function handle()
+    public function __construct(
+        private \Core\Request $request,
+        private \Core\Response $response,
+        private \Core\Session $session
+    ) {}
+
+    public function handle()
     {
-        $token = Request::input('csrf_token');
-        $isValid = Session::verifyCsrf($token);
+        $token = $this->request->post('csrf_token');
+        $isValid = $this->session->verifyCsrf($token);
 
         if (!$isValid) {
-            Session::setFlash('danger', 'Token de segurança inválido');
-            Response::redirect('same_uri');
+            $this->session->setFlash('danger', 'Token de segurança inválido');
+            $this->response->redirect('same_uri');
         }
     }
 }

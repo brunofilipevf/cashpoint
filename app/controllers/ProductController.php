@@ -2,31 +2,37 @@
 
 namespace App\Controllers;
 
-use App\Models\Product;
-use Core\{Database, Request, Response, Session, Validator};
-
 class ProductController
 {
-    public static function index()
+    public function __construct(
+        private \App\Models\Product $product,
+        private \Core\Database $database,
+        private \Core\Request $request,
+        private \Core\Response $response,
+        private \Core\Session $session,
+        private \Core\Validator $validator
+    ) {}
+
+    public function index()
     {
-        Response::view('product/index', [
-            'products' => Product::all()
+        $this->response->view('product/index', [
+            'products' => $this->product->all()
         ]);
     }
 
-    public static function add()
+    public function add()
     {
-        Response::view('product/add');
+        $this->response->view('product/add');
     }
 
-    public static function insert()
+    public function insert()
     {
         $requestData = [
-            'name' => Request::input('name'),
-            'barcode' => Request::input('barcode')
+            'name' => $this->request->post('name'),
+            'barcode' => $this->request->post('barcode')
         ];
 
-        $errors = Validator::fields($requestData, [
+        $errors = $this->validator->fields($requestData, [
             'name' => 'required|string|max:60',
             'barcode' => 'required|string|max:13|unique:product,barcode'
         ], [
@@ -35,43 +41,43 @@ class ProductController
         ]);
 
         if ($errors) {
-            Session::setFlash('danger', $errors);
-            Response::redirect('same_uri');
+            $this->session->setFlash('danger', $errors);
+            $this->response->redirect('same_uri');
         }
 
-        Product::insert($requestData);
-        Session::setFlash('success', 'Produto adicionado com sucesso');
-        Response::redirect('/products');
+        $this->product->insert($requestData);
+        $this->session->setFlash('success', 'Produto adicionado com sucesso');
+        $this->response->redirect('/products');
     }
 
-    public static function edit($productId)
+    public function edit($productId)
     {
-        $productData = Product::find($productId);
+        $productData = $this->product->find($productId);
 
         if (!$productData) {
-            Response::abort(404);
+            $this->response->abort(404);
         }
 
-        Response::view('product/edit', [
+        $this->response->view('product/edit', [
             'product' => $productData
         ]);
     }
 
-    public static function update($productId)
+    public function update($productId)
     {
-        $productData = Product::find($productId);
+        $productData = $this->product->find($productId);
 
         if (!$productData) {
-            Response::abort(404);
+            $this->response->abort(404);
         }
 
         $requestData = [
-            'name' => Request::input('name'),
-            'barcode' => Request::input('barcode'),
-            'is_active' => Request::input('is_active')
+            'name' => $this->request->post('name'),
+            'barcode' => $this->request->post('barcode'),
+            'is_active' => $this->request->post('is_active')
         ];
 
-        $errors = Validator::fields($requestData, [
+        $errors = $this->validator->fields($requestData, [
             'name' => 'required|string|max:60',
             'barcode' => "required|string|max:13|unique:product,barcode,{$productId}",
             'is_active' => 'required|in:0,1'
@@ -82,30 +88,30 @@ class ProductController
         ]);
 
         if ($errors) {
-            Session::setFlash('danger', $errors);
-            Response::redirect('same_uri');
+            $this->session->setFlash('danger', $errors);
+            $this->response->redirect('same_uri');
         }
 
-        Product::update($requestData, $productId);
-        Session::setFlash('success', 'Produto atualizado com sucesso');
-        Response::redirect('/products');
+        $this->product->update($requestData, $productId);
+        $this->session->setFlash('success', 'Produto atualizado com sucesso');
+        $this->response->redirect('/products');
     }
 
-    public static function delete($productId)
+    public function delete($productId)
     {
-        $productData = Product::find($productId);
+        $productData = $this->product->find($productId);
 
         if (!$productData) {
-            Response::abort(404);
+            $this->response->abort(404);
         }
 
-        if (Database::existsInTables($productId, 'product_id', ['award', 'redemption', 'supply'])) {
-            Session::setFlash('danger', 'Não é possível excluir este produto');
-            Response::redirect('/products/edit/' . $productId);
+        if ($this->database->existsInTables($productId, 'product_id', ['award', 'redemption', 'supply'])) {
+            $this->session->setFlash('danger', 'Não é possível excluir este produto');
+            $this->response->redirect('/products/edit/' . $productId);
         }
 
-        Product::delete($productId);
-        Session::setFlash('success', 'Produto excluído com sucesso');
-        Response::redirect('/products');
+        $this->product->delete($productId);
+        $this->session->setFlash('success', 'Produto excluído com sucesso');
+        $this->response->redirect('/products');
     }
 }

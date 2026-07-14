@@ -2,47 +2,43 @@
 
 namespace App\Models;
 
-use Core\Database;
-
 class Group
 {
-    public static function all()
+    public function __construct(
+        private \Core\Database $database
+    ) {}
+
+    public function all()
     {
-        $sql = "SELECT * FROM `group` ORDER BY id DESC";
-        
-        return Database::selectAll($sql);
+        return $this->database->selectAll("SELECT * FROM `group` ORDER BY id DESC");
     }
 
-    public static function find($groupId)
+    public function find($groupId)
     {
-        $sql = "SELECT * FROM `group` WHERE id = ? LIMIT 1";
-
-        return Database::selectOne($sql, [$groupId]);
+        return $this->database->selectOne("SELECT * FROM `group` WHERE id = ? LIMIT 1", [$groupId]);
     }
 
-    public static function insert($data)
+    public function insert($data)
     {
         $columns = implode(', ', array_keys($data));
         $placeholders = implode(', ', array_fill(0, count($data), '?'));
         $sql = "INSERT INTO `group` ({$columns}, created_at) VALUES ({$placeholders}, NOW())";
 
-        return Database::insert($sql, array_values($data));
+        return $this->database->insert($sql, array_values($data));
     }
 
-    public static function update($data, $groupId)
+    public function update($data, $groupId)
     {
         $set = implode(' = ?, ', array_keys($data)) . ' = ?';
         $sql = "UPDATE `group` SET {$set}, updated_at = NOW() WHERE id = ?";
         $params = array_values($data);
         $params[] = $groupId;
 
-        return Database::update($sql, $params);
+        return $this->database->update($sql, $params);
     }
 
-    public static function delete($groupId)
+    public function delete($groupId)
     {
-        $sql = "DELETE FROM `group` WHERE id = ?";
-
-        return Database::delete($sql, [$groupId]);
+        return $this->database->delete("DELETE FROM `group` WHERE id = ?", [$groupId]);
     }
 }

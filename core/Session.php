@@ -4,7 +4,141 @@ namespace Core;
 
 class Session
 {
-    private static function init()
+    public function set($key, $value)
+    {
+        $this->startSession();
+
+        $keys = explode('.', $key);
+        $session = &$_SESSION;
+
+        foreach ($keys as $k) {
+            $session = &$session[$k];
+        }
+
+        $session = $value;
+    }
+
+    public function get($key)
+    {
+        $this->startSession();
+
+        $keys = explode('.', $key);
+        $session = $_SESSION;
+
+        foreach ($keys as $k) {
+            if (!isset($session[$k])) {
+                return null;
+            }
+            $session = $session[$k];
+        }
+
+        return $session;
+    }
+
+    public function unset($key)
+    {
+        $this->startSession();
+
+        $keys = explode('.', $key);
+        $last = array_pop($keys);
+        $session = &$_SESSION;
+
+        foreach ($keys as $k) {
+            if (!isset($session[$k])) {
+                return;
+            }
+            $session = &$session[$k];
+        }
+
+        unset($session[$last]);
+    }
+
+    public function destroy()
+    {
+        $this->startSession();
+
+        $_SESSION = [];
+
+        $param = session_get_cookie_params();
+
+        setcookie(session_name(), '', [
+            'expires' => 0,
+            'path' => $param['path'],
+            'domain' => $param['domain'],
+            'secure' => $param['secure'],
+            'httponly' => $param['httponly'],
+            'samesite' => 'Strict'
+        ]);
+
+        session_destroy();
+    }
+
+    public function regenerate()
+    {
+        $this->startSession();
+
+        session_regenerate_id(true);
+    }
+
+    public function getCsrf()
+    {
+        $stored = $this->get('csrf_token');
+
+        if ($stored !== null) {
+            return $stored;
+        }
+
+        $token = bin2hex(random_bytes(32));
+        $this->set('csrf_token', $token);
+
+        return $token;
+    }
+
+    public function verifyCsrf($token)
+    {
+        $stored = $this->get('csrf_token');
+
+        if ($stored === null || $token === null) {
+            return false;
+        }
+
+        if (!hash_equals($stored, $token)) {
+            return false;
+        }
+
+        $token = bin2hex(random_bytes(32));
+        $this->set('csrf_token', $token);
+
+        return true;
+    }
+
+    public function setFlash($type, $content)
+    {
+        if (is_array($content)) {
+            $content = implode("\n", $content);
+        }
+
+        $this->set('flash.type', $type);
+        $this->set('flash.message', $message);
+    }
+
+    public function getFlash()
+    {
+        $flash = [
+            'type' => $this->get('flash.type'),
+            'message' => $this->get('flash.message')
+        ];
+
+        $this->unset('flash');
+
+        if ($flash['type'] === null || $flash['message'] === null) {
+            return [];
+        }
+
+        return $flash;
+    }
+
+    private function startSession()
     {
         if (session_status() !== PHP_SESSION_ACTIVE) {
             session_name('PHPSESSID');
@@ -28,139 +162,5 @@ class Session
             $_SESSION['last_regeneration'] = time();
             session_regenerate_id(true);
         }
-    }
-
-    public static function set($key, $value)
-    {
-        self::init();
-
-        $keys = explode('.', $key);
-        $session = &$_SESSION;
-
-        foreach ($keys as $k) {
-            $session = &$session[$k];
-        }
-
-        $session = $value;
-    }
-
-    public static function get($key)
-    {
-        self::init();
-
-        $keys = explode('.', $key);
-        $session = $_SESSION;
-
-        foreach ($keys as $k) {
-            if (!isset($session[$k])) {
-                return null;
-            }
-            $session = $session[$k];
-        }
-
-        return $session;
-    }
-
-    public static function unset($key)
-    {
-        self::init();
-
-        $keys = explode('.', $key);
-        $last = array_pop($keys);
-        $session = &$_SESSION;
-
-        foreach ($keys as $k) {
-            if (!isset($session[$k])) {
-                return;
-            }
-            $session = &$session[$k];
-        }
-
-        unset($session[$last]);
-    }
-
-    public static function destroy()
-    {
-        self::init();
-
-        $_SESSION = [];
-
-        $param = session_get_cookie_params();
-
-        setcookie(session_name(), '', [
-            'expires' => 0,
-            'path' => $param['path'],
-            'domain' => $param['domain'],
-            'secure' => $param['secure'],
-            'httponly' => $param['httponly'],
-            'samesite' => 'Strict'
-        ]);
-
-        session_destroy();
-    }
-
-    public static function regenerate()
-    {
-        self::init();
-
-        session_regenerate_id(true);
-    }
-
-    public static function getCsrf()
-    {
-        $sessionToken = self::get('csrf_token');
-
-        if ($sessionToken !== null) {
-            return $sessionToken;
-        }
-
-        $token = bin2hex(random_bytes(32));
-        self::set('csrf_token', $token);
-
-        return $token;
-    }
-
-    public static function verifyCsrf($token)
-    {
-        $sessionToken = self::get('csrf_token');
-
-        if ($sessionToken === null || $token === null) {
-            return false;
-        }
-
-        if (!hash_equals($sessionToken, $token)) {
-            return false;
-        }
-
-        $token = bin2hex(random_bytes(32));
-        self::set('csrf_token', $token);
-
-        return true;
-    }
-
-    public static function setFlash($type, $message)
-    {
-        if (is_array($message)) {
-            $message = implode("\n", $message);
-        }
-
-        self::set('flash.type', $type);
-        self::set('flash.message', $message);
-    }
-
-    public static function getFlash()
-    {
-        $flash = [
-            'type' => self::get('flash.type'),
-            'message' => self::get('flash.message')
-        ];
-
-        self::unset('flash');
-
-        if ($flash['type'] === null || $flash['message'] === null) {
-            return [];
-        }
-
-        return $flash;
     }
 }

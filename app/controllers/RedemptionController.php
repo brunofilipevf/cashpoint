@@ -2,35 +2,45 @@
 
 namespace App\Controllers;
 
-use App\Models\{Auth, Award, Redemption};
-use Core\{Database, Request, Response, Session, Validator};
-
 class RedemptionController
 {
-    public static function index()
+    public function __construct(
+        private \App\Models\Auth $auth,
+        private \App\Models\Award $award,
+        private \App\Models\Customer $customer,
+        private \App\Models\Redemption $redemption,
+        private \App\Models\Score $score,
+        private \Core\Database $database,
+        private \Core\Request $request,
+        private \Core\Response $response,
+        private \Core\Session $session,
+        private \Core\Validator $validator
+    ) {}
+
+    public function index()
     {
-        Response::view('redemption/index', [
-            'redemptions' => Redemption::all()
+        $this->response->view('redemption/index', [
+            'redemptions' => $this->redemption->all()
         ]);
     }
 
-    public static function add()
+    public function add()
     {
-        Response::view('redemption/add', [
-            'awards' => Award::allAvailable()
+        $this->response->view('redemption/add', [
+            'awards' => $this->award->allAvailable()
         ]);
     }
 
-    public static function insert()
+    public function insert()
     {
-        $authUserData = Auth::stored();
+        $authUserData = $this->auth->stored();
 
         $requestData = [
-            'cpf' => Request::input('cpf'),
-            'award_id' => Request::input('award_id')
+            'cpf' => $this->request->post('cpf'),
+            'award_id' => $this->request->post('award_id')
         ];
 
-        $errors = Validator::fields($requestData, [
+        $errors = $this->validator->fields($requestData, [
             'cpf' => 'required|document|exist:customer,cpf',
             'award_id' => 'required|integer|exist:award,id'
         ], [
@@ -39,80 +49,72 @@ class RedemptionController
         ]);
 
         if ($errors) {
-            Session::setFlash('danger', $errors);
-            Response::redirect('same_uri');
+            $this->session->setFlash('danger', $errors);
+            $this->response->redirect('same_uri');
         }
 
-        Database::beginTransaction();
+        $this->database->beginTransaction();
 
-        try {
+        $customerData = $this->customer->findByCpfForUpdate($requestData['cpf']);
 
-            $customerData = Customer::findByCpfForUpdate($requestData['cpf']);
-
-            if ($customerData['is_active'] !== 1) {
-                Database::rollBack();
-                Session::setFlash('danger', 'Cliente inativo');
-                Response::redirect('same_uri');
-            }
-
-            $awardData = Award::findForUpdate($requestData['award_id']);
-
-            if ($awardData['is_active'] !== 1) {
-                Database::rollBack();
-                Session::setFlash('danger', 'Premiação inativa');
-                Response::redirect('same_uri');
-            }
-
-            $now = date('Y-m-d H:i:s');
-
-            if ($now < $awardData['start_date'] || $now > $awardData['end_date']) {
-                Database::rollBack();
-                Session::setFlash('danger', 'Premiação fora do período de validade');
-                Response::redirect('same_uri');
-            }
-
-            $totalRedemptions = Redemption::countByAward($awardData['id']);
-
-            if ($totalRedemptions >= $awardData['max_redemption_total']) {
-                Database::rollBack();
-                Session::setFlash('danger', 'Limite total de resgate para esta premiação atingido');
-                Response::redirect('same_uri');
-            }
-
-            $customerRedemptions = Redemption::countByAwardAndCustomer($awardData['id'], $customerData['id']);
-
-            if ($customerRedemptions >= $awardData['max_redemption_per_customer']) {
-                Database::rollBack();
-                Session::setFlash('danger', 'Limite de resgate por cliente para este premiação atingido');
-                Response::redirect('same_uri');
-            }
-
-            $balanceData = Score::findBalanceFromCustomer($customerData['id']);
-
-            if ($balanceData['balance'] < $awardData['required_points']) {
-                Database::rollBack();
-                Session::setFlash('danger', 'Cliente não possui saldo suficiente para resgatar esta premiação');
-                Response::redirect('same_uri');
-            }
-
-            $dataToBeSaved = [
-                'transaction_code' => bin2hex(random_bytes(16)),
-                'customer_id' => $customerData['id'],
-                'award_id' => $awardData['id'],
-                'product_id' => $awardData['product_id'],
-                'user_id' => $authUserData['id'],
-                'points_used' => $awardData['required_points']
-            ];
-
-            Redemption::insert($dataToBeSaved);
-            Database::commit();
-
-        } catch (\Exception) {
-            Database::rollBack();
-            Session::setFlash('danger', 'Erro ao registrar resgate');
+        if ($customerData['is_active'] !== 1) {
+            $this->database->rollBack();
+            $this->session->setFlash('danger', 'Cliente inativo');
+            $this->response->redirect('same_uri');
         }
 
-        Session::setFlash('success', 'Resgate registrado com sucesso');
-        Response::redirect('/redemptions');
+        $awardData = $this->award->findForUpdate($requestData['award_id']);
+
+        if ($awardData['is_active'] !== 1) {
+            $this->database->rollBack();
+            $this->session->setFlash('danger', 'Premiação inativa');
+            $this->response->redirect('same_uri');
+        }
+
+        $now = date('Y-m-d H:i:s');
+
+        if ($now < $awardData['start_date'] || $now > $awardData['end_date']) {
+            $this->database->rollBack();
+            $this->session->setFlash('danger', 'Premiação fora do período de validade');
+            $this->response->redirect('same_uri');
+        }
+
+        $totalRedemptions = $this->redemption->countByAward($awardData['id']);
+
+        if ($totalRedemptions >= $awardData['max_redemption_total']) {
+            $this->database->rollBack();
+            $this->session->setFlash('danger', 'Limite total de resgate para esta premiação atingido');
+            $this->response->redirect('same_uri');
+        }
+
+        $customerRedemptions = $this->redemption->countByAwardAndCustomer($awardData['id'], $customerData['id']);
+
+        if ($customerRedemptions >= $awardData['max_redemption_per_customer']) {
+            $this->database->rollBack();
+            $this->session->setFlash('danger', 'Limite de resgate por cliente para este premiação atingido');
+            $this->response->redirect('same_uri');
+        }
+
+        $balanceData = $this->score->findBalanceFromCustomer($customerData['id']);
+
+        if ($balanceData['balance'] < $awardData['required_points']) {
+            $this->database->rollBack();
+            $this->session->setFlash('danger', 'Cliente não possui saldo suficiente para resgatar esta premiação');
+            $this->response->redirect('same_uri');
+        }
+
+        $dataToBeSaved = [
+            'transaction_code' => bin2hex(random_bytes(16)),
+            'customer_id' => $customerData['id'],
+            'award_id' => $awardData['id'],
+            'product_id' => $awardData['product_id'],
+            'user_id' => $authUserData['id'],
+            'points_used' => $awardData['required_points']
+        ];
+
+        $this->redemption->insert($dataToBeSaved);
+        $this->database->commit();
+        $this->session->setFlash('success', 'Resgate registrado com sucesso');
+        $this->response->redirect('/redemptions');
     }
 }

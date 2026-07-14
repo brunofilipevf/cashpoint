@@ -2,54 +2,48 @@
 
 namespace App\Models;
 
-use Core\Database;
-
 class Company
 {
-    public static function all()
-    {
-        $sql = "SELECT * FROM `company` ORDER BY id DESC";
+    public function __construct(
+        private \Core\Database $database
+    ) {}
 
-        return Database::selectAll($sql);
+    public function all()
+    {
+        return $this->database->selectAll("SELECT * FROM `company` ORDER BY id DESC");
     }
 
-    public static function find($companyId)
+    public function find($companyId)
     {
-        $sql = "SELECT * FROM `company` WHERE id = ? LIMIT 1";
-
-        return Database::selectOne($sql, [$companyId]);
+        return $this->database->selectOne("SELECT * FROM `company` WHERE id = ? LIMIT 1", [$companyId]);
     }
 
-    public static function findByCpf($cpf)
+    public function findByCpfForUpdate($cpf)
     {
-        $sql = "SELECT * FROM `company` WHERE cpf = ? LIMIT 1";
-
-        return Database::selectOne($sql, [$cpf]);
+        return $this->database->selectOne("SELECT * FROM `company` WHERE cpf = ? LIMIT 1 FOR UPDATE", [$cpf]);
     }
 
-    public static function insert($data)
+    public function insert($data)
     {
         $columns = implode(', ', array_keys($data));
         $placeholders = implode(', ', array_fill(0, count($data), '?'));
         $sql = "INSERT INTO `company` ({$columns}, created_at) VALUES ({$placeholders}, NOW())";
 
-        return Database::insert($sql, array_values($data));
+        return $this->database->insert($sql, array_values($data));
     }
 
-    public static function update($data, $companyId)
+    public function update($data, $companyId)
     {
         $set = implode(' = ?, ', array_keys($data)) . ' = ?';
         $sql = "UPDATE `company` SET {$set}, updated_at = NOW() WHERE id = ?";
         $params = array_values($data);
         $params[] = $companyId;
 
-        return Database::update($sql, $params);
+        return $this->database->update($sql, $params);
     }
 
-    public static function delete($companyId)
+    public function delete($companyId)
     {
-        $sql = "DELETE FROM `company` WHERE id = ?";
-
-        return Database::delete($sql, [$companyId]);
+        return $this->database->delete("DELETE FROM `company` WHERE id = ?", [$companyId]);
     }
 }

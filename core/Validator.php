@@ -4,15 +4,19 @@ namespace Core;
 
 class Validator
 {
-    private static $errors = [];
-    private static $isNumeric = false;
+    private $errors = [];
+    private $isNumeric = false;
 
-    public static function fields($values, $rules, $labels)
+    public function __construct(
+        private Database $database
+    ) {}
+
+    public function fields($values, $rules, $labels)
     {
-        self::$errors = [];
+        $this->errors = [];
 
         foreach ($rules as $field => $ruleset) {
-            self::$isNumeric = false;
+            $this->isNumeric = false;
 
             $value = $values[$field];
             $label = $labels[$field];
@@ -28,44 +32,44 @@ class Validator
                     $param = null;
                 }
 
-                $before = count(self::$errors);
+                $before = count($this->errors);
 
                 match ($name) {
-                    'required' => self::validateRequired($value, $label),
-                    'integer' => self::validateInteger($value, $label),
-                    'numeric' => self::validateNumeric($value, $label),
-                    'string' => self::validateString($value, $label),
-                    'alpha' => self::validateAlpha($value, $label),
-                    'alphanum' => self::validateAlphanum($value, $label),
-                    'document' => self::validateDocument($value, $label),
-                    'email' => self::validateEmail($value, $label),
-                    'phone' => self::validatePhone($value, $label),
-                    'date' => self::validateDate($value, $label),
-                    'min' => self::validateMin($value, $label, $param),
-                    'max' => self::validateMax($value, $label, $param),
-                    'in' => self::validateIn($value, $label, $param),
-                    'exist' => self::validateExist($value, $label, $param),
-                    'unique' => self::validateUnique($value, $label, $param),
+                    'required' => $this->validateRequired($value, $label),
+                    'integer' => $this->validateInteger($value, $label),
+                    'numeric' => $this->validateNumeric($value, $label),
+                    'string' => $this->validateString($value, $label),
+                    'alpha' => $this->validateAlpha($value, $label),
+                    'alphanum' => $this->validateAlphanum($value, $label),
+                    'document' => $this->validateDocument($value, $label),
+                    'email' => $this->validateEmail($value, $label),
+                    'phone' => $this->validatePhone($value, $label),
+                    'date' => $this->validateDate($value, $label),
+                    'min' => $this->validateMin($value, $label, $param),
+                    'max' => $this->validateMax($value, $label, $param),
+                    'in' => $this->validateIn($value, $label, $param),
+                    'exist' => $this->validateExist($value, $label, $param),
+                    'unique' => $this->validateUnique($value, $label, $param),
                     default => throw new \RuntimeException("[Validator] Validador não encontrado para '{$name}'")
                 };
 
-                if (count(self::$errors) > $before) {
+                if (count($this->errors) > $before) {
                     break;
                 }
             }
         }
 
-        return self::$errors;
+        return $this->errors;
     }
 
-    private static function validateRequired($value, $label)
+    private function validateRequired($value, $label)
     {
         if ($value === null || $value === '') {
-            self::$errors[] = "O campo {$label} é obrigatório";
+            $this->errors[] = "O campo {$label} é obrigatório";
         }
     }
 
-    private static function validateInteger($value, $label)
+    private function validateInteger($value, $label)
     {
         if ($value === null || $value === '') {
             return;
@@ -74,19 +78,19 @@ class Validator
         $intValue = filter_var($value, FILTER_VALIDATE_INT);
 
         if ($intValue === false) {
-            self::$errors[] = "O campo {$label} deve ser um número inteiro";
+            $this->errors[] = "O campo {$label} deve ser um número inteiro";
             return;
         }
 
         if ($intValue < 0 || $intValue > 4294967295) {
-            self::$errors[] = "O campo {$label} está fora da faixa permitida";
+            $this->errors[] = "O campo {$label} está fora da faixa permitida";
             return;
         }
 
-        self::$isNumeric = true;
+        $this->isNumeric = true;
     }
 
-    private static function validateNumeric($value, $label)
+    private function validateNumeric($value, $label)
     {
         if ($value === null || $value === '') {
             return;
@@ -95,122 +99,122 @@ class Validator
         $floatValue = filter_var($value, FILTER_VALIDATE_FLOAT);
 
         if ($floatValue === false) {
-            self::$errors[] = "O campo {$label} deve ser numérico";
+            $this->errors[] = "O campo {$label} deve ser numérico";
             return;
         }
 
         if (stripos($value, 'e') !== false) {
-            self::$errors[] = "O campo {$label} não aceita notação científica";
+            $this->errors[] = "O campo {$label} não aceita notação científica";
             return;
         }
 
         if (!preg_match('/^\d+(\.\d{1,2})?$/', $value)) {
-            self::$errors[] = "O campo {$label} deve ter no máximo 2 casas decimais";
+            $this->errors[] = "O campo {$label} deve ter no máximo 2 casas decimais";
             return;
         }
 
         if ($floatValue < 0 || $floatValue > 99999999.99) {
-            self::$errors[] = "O campo {$label} está fora da faixa permitida";
+            $this->errors[] = "O campo {$label} está fora da faixa permitida";
             return;
         }
 
-        self::$isNumeric = true;
+        $this->isNumeric = true;
     }
 
-    private static function validateString($value, $label)
+    private function validateString($value, $label)
     {
         if ($value === null || $value === '') {
             return;
         }
 
         if (mb_strlen($value, 'UTF-8') > 255) {
-            self::$errors[] = "O campo {$label} está fora do limite permitido";
+            $this->errors[] = "O campo {$label} está fora do limite permitido";
         }
     }
 
-    private static function validateAlpha($value, $label)
+    private function validateAlpha($value, $label)
     {
         if ($value === null || $value === '') {
             return;
         }
 
         if (!ctype_alpha($value)) {
-            self::$errors[] = "O campo {$label} deve conter apenas letras (sem acentos)";
+            $this->errors[] = "O campo {$label} deve conter apenas letras (sem acentos)";
             return;
         }
 
         if (mb_strlen($value, 'UTF-8') > 255) {
-            self::$errors[] = "O campo {$label} está fora do limite permitido";
+            $this->errors[] = "O campo {$label} está fora do limite permitido";
         }
     }
 
-    private static function validateAlphanum($value, $label)
+    private function validateAlphanum($value, $label)
     {
         if ($value === null || $value === '') {
             return;
         }
 
         if (!ctype_alnum($value)) {
-            self::$errors[] = "O campo {$label} deve conter apenas letras (sem acentos) e números";
+            $this->errors[] = "O campo {$label} deve conter apenas letras (sem acentos) e números";
             return;
         }
 
         if (mb_strlen($value, 'UTF-8') > 255) {
-            self::$errors[] = "O campo {$label} está fora do limite permitido";
+            $this->errors[] = "O campo {$label} está fora do limite permitido";
         }
     }
 
-    private static function validateDocument($value, $label)
+    private function validateDocument($value, $label)
     {
         if ($value === null || $value === '') {
             return;
         }
 
         if (!ctype_digit($value)) {
-            self::$errors[] = "O campo {$label} deve conter apenas números";
+            $this->errors[] = "O campo {$label} deve conter apenas números";
             return;
         }
 
         $len = mb_strlen($value, 'UTF-8');
 
         if ($len !== 11 && $len !== 14) {
-            self::$errors[] = "O campo {$label} deve ter 11 ou 14 dígitos";
+            $this->errors[] = "O campo {$label} deve ter 11 ou 14 dígitos";
         }
     }
 
-    private static function validateEmail($value, $label)
+    private function validateEmail($value, $label)
     {
         if ($value === null || $value === '') {
             return;
         }
 
         if (!filter_var($value, FILTER_VALIDATE_EMAIL)) {
-            self::$errors[] = "O campo {$label} deve ser um e-mail válido";
+            $this->errors[] = "O campo {$label} deve ser um e-mail válido";
             return;
         }
 
         if (mb_strlen($value, 'UTF-8') > 254) {
-            self::$errors[] = "O campo {$label} está fora do limite permitido";
+            $this->errors[] = "O campo {$label} está fora do limite permitido";
         }
     }
 
-    private static function validatePhone($value, $label)
+    private function validatePhone($value, $label)
     {
         if ($value === null || $value === '') {
             return;
         }
 
         if (!ctype_digit($value)) {
-            self::$errors[] = "O campo {$label} deve conter apenas números";
+            $this->errors[] = "O campo {$label} deve conter apenas números";
             return;
         }
 
         if (mb_strlen($value, 'UTF-8') !== 11) {
-            self::$errors[] = "O campo {$label} deve conter o DDD e o número, totalizando 11 dígitos";
+            $this->errors[] = "O campo {$label} deve conter o DDD e o número, totalizando 11 dígitos";
         }
     }
 
-    private static function validateDate($value, $label)
+    private function validateDate($value, $label)
     {
         if ($value === null || $value === '') {
             return;
@@ -222,46 +226,46 @@ class Validator
             return;
         }
 
-        self::$errors[] = "O campo {$label} deve ser uma data válida";
+        $this->errors[] = "O campo {$label} deve ser uma data válida";
     }
 
-    private static function validateMin($value, $label, $param)
+    private function validateMin($value, $label, $param)
     {
         if ($value === null || $value === '') {
             return;
         }
 
-        if (self::$isNumeric) {
+        if ($this->isNumeric) {
             if ((float) $value < (float) $param) {
-                self::$errors[] = "O campo {$label} deve ser no mínimo {$param}";
+                $this->errors[] = "O campo {$label} deve ser no mínimo {$param}";
             }
             return;
         }
 
         if (mb_strlen($value, 'UTF-8') < (int) $param) {
-            self::$errors[] = "O campo {$label} deve ter no mínimo {$param} caracteres";
+            $this->errors[] = "O campo {$label} deve ter no mínimo {$param} caracteres";
         }
     }
 
-    private static function validateMax($value, $label, $param)
+    private function validateMax($value, $label, $param)
     {
         if ($value === null || $value === '') {
             return;
         }
 
-        if (self::$isNumeric) {
+        if ($this->isNumeric) {
             if ((float) $value > (float) $param) {
-                self::$errors[] = "O campo {$label} deve ser no máximo {$param}";
+                $this->errors[] = "O campo {$label} deve ser no máximo {$param}";
             }
             return;
         }
 
         if (mb_strlen($value, 'UTF-8') > (int) $param) {
-            self::$errors[] = "O campo {$label} deve ter no máximo {$param} caracteres";
+            $this->errors[] = "O campo {$label} deve ter no máximo {$param} caracteres";
         }
     }
 
-    private static function validateIn($value, $label, $param)
+    private function validateIn($value, $label, $param)
     {
         if ($value === null || $value === '') {
             return;
@@ -270,11 +274,11 @@ class Validator
         $allowed = explode(',', $param);
 
         if (!in_array($value, $allowed, true)) {
-            self::$errors[] = "O campo {$label} deve conter um valor válido";
+            $this->errors[] = "O campo {$label} deve conter um valor válido";
         }
     }
 
-    private static function validateExist($value, $label, $param)
+    private function validateExist($value, $label, $param)
     {
         if ($value === null || $value === '') {
             return;
@@ -285,14 +289,14 @@ class Validator
         $column = $parts[1];
 
         $sql = "SELECT 1 FROM `{$table}` WHERE {$column} = ? LIMIT 1";
-        $result = Database::exist($sql, [$value]);
+        $result = $this->database->exist($sql, [$value]);
 
         if (!$result) {
-            self::$errors[] = "O valor do campo {$label} não existe";
+            $this->errors[] = "O valor do campo {$label} não existe";
         }
     }
 
-    private static function validateUnique($value, $label, $param)
+    private function validateUnique($value, $label, $param)
     {
         if ($value === null || $value === '') {
             return;
@@ -310,14 +314,14 @@ class Validator
 
         if ($excludeId) {
             $sql = "SELECT 1 FROM `{$table}` WHERE {$column} = ? AND id != ? LIMIT 1";
-            $result = Database::exist($sql, [$value, $excludeId]);
+            $result = $this->database->exist($sql, [$value, $excludeId]);
         } else {
             $sql = "SELECT 1 FROM `{$table}` WHERE {$column} = ? LIMIT 1";
-            $result = Database::exist($sql, [$value]);
+            $result = $this->database->exist($sql, [$value]);
         }
 
         if ($result) {
-            self::$errors[] = "O valor do campo {$label} já está em uso";
+            $this->errors[] = "O valor do campo {$label} já está em uso";
         }
     }
 }

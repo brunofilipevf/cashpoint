@@ -4,7 +4,7 @@ namespace Core;
 
 class Request
 {
-    public static function method()
+    public function method()
     {
         if (!isset($_SERVER['REQUEST_METHOD'])) {
             return 'GET';
@@ -13,7 +13,7 @@ class Request
         return strtoupper($_SERVER['REQUEST_METHOD']);
     }
 
-    public static function uri()
+    public function uri()
     {
         if (!isset($_SERVER['REQUEST_URI'])) {
             return '/';
@@ -35,7 +35,7 @@ class Request
         return $uri;
     }
 
-    public static function ip()
+    public function ip()
     {
         if (!isset($_SERVER['REMOTE_ADDR'])) {
             return '0.0.0.0';
@@ -54,7 +54,7 @@ class Request
         return $ip;
     }
 
-    public static function input($key)
+    public function post($key)
     {
         if (!isset($_POST[$key])) {
             return null;
@@ -75,7 +75,7 @@ class Request
         return $value;
     }
 
-    public static function json()
+    public function json()
     {
         $input = file_get_contents('php://input');
 

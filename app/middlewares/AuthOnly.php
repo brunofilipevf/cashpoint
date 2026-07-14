@@ -2,39 +2,44 @@
 
 namespace App\Middlewares;
 
-use App\Models\{Activity, Auth, User};
-use Core\{Response, Session};
-
 class AuthOnly
 {
-    public static function handle($minHierarchy = 0)
+    public function __construct(
+        private \App\Models\Activity $activity,
+        private \App\Models\Auth $auth,
+        private \App\Models\User $user,
+        private \Core\Response $response,
+        private \Core\Session $session
+    ) {}
+
+    public function handle($minHierarchy = 0)
     {
-        $authToken = Session::get('auth.token');
+        $authToken = $this->session->get('auth.token');
 
         if ($authToken === null) {
-            Response::redirect('/login');
+            $this->response->redirect('/login');
         }
 
-        $authUserId = Activity::verify($authToken);
+        $authUserId = $this->activity->verify($authToken);
 
         if (!$authUserId) {
-            Session::destroy();
-            Activity::revoke($authToken);
-            Response::redirect('/login');
+            $this->session->destroy();
+            $this->activity->revoke($authToken);
+            $this->response->redirect('/login');
         }
 
-        $authUserData = User::find($authUserId);
+        $authUserData = $this->user->find($authUserId);
 
         if (!$authUserData) {
-            Session::destroy();
-            Activity::revoke($authToken);
-            Response::redirect('/login');
+            $this->session->destroy();
+            $this->activity->revoke($authToken);
+            $this->response->redirect('/login');
         }
 
         if ($authUserData['hierarchy'] < $minHierarchy) {
-            Response::abort(403);
+            $this->response->abort(403);
         }
 
-        Auth::store($authUserData);
+        $this->auth->store($authUserData);
     }
 }

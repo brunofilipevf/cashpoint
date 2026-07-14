@@ -2,31 +2,37 @@
 
 namespace App\Controllers;
 
-use App\Models\Group;
-use Core\{Database, Request, Response, Session, Validator};
-
 class GroupController
 {
-    public static function index()
+    public function __construct(
+        private \App\Models\Group $group,
+        private \Core\Database $database,
+        private \Core\Request $request,
+        private \Core\Response $response,
+        private \Core\Session $session,
+        private \Core\Validator $validator
+    ) {}
+
+    public function index()
     {
-        Response::view('group/index', [
-            'groups' => Group::all()
+        $this->response->view('group/index', [
+            'groups' => $this->group->all()
         ]);
     }
 
-    public static function add()
+    public function add()
     {
-        Response::view('group/add');
+        $this->response->view('group/add');
     }
 
-    public static function insert()
+    public function insert()
     {
         $requestData = [
-            'name' => Request::input('name'),
-            'multiplier_factor' => Request::input('multiplier_factor')
+            'name' => $this->request->post('name'),
+            'multiplier_factor' => $this->request->post('multiplier_factor')
         ];
 
-        $errors = Validator::fields($requestData, [
+        $errors = $this->validator->fields($requestData, [
             'name' => 'required|string|max:60',
             'multiplier_factor' => 'required|numeric|min:0.01|max:' . MAX_VALUE_LIMIT_MULTIPLIER_FACTOR
         ], [
@@ -35,43 +41,43 @@ class GroupController
         ]);
 
         if ($errors) {
-            Session::setFlash('danger', $errors);
-            Response::redirect('same_uri');
+            $this->session->setFlash('danger', $errors);
+            $this->response->redirect('same_uri');
         }
 
-        Group::insert($requestData);
-        Session::setFlash('success', 'Grupo adicionado com sucesso');
-        Response::redirect('/groups');
+        $this->group->insert($requestData);
+        $this->session->setFlash('success', 'Grupo adicionado com sucesso');
+        $this->response->redirect('/groups');
     }
 
-    public static function edit($groupId)
+    public function edit($groupId)
     {
-        $groupData = Group::find($groupId);
+        $groupData = $this->group->find($groupId);
 
         if (!$groupData) {
-            Response::abort(404);
+            $this->response->abort(404);
         }
 
-        Response::view('group/edit', [
+        $this->response->view('group/edit', [
             'group' => $groupData
         ]);
     }
 
-    public static function update($groupId)
+    public function update($groupId)
     {
-        $groupData = Group::find($groupId);
+        $groupData = $this->group->find($groupId);
 
         if (!$groupData) {
-            Response::abort(404);
+            $this->response->abort(404);
         }
 
         $requestData = [
-            'name' => Request::input('name'),
-            'multiplier_factor' => Request::input('multiplier_factor'),
-            'is_active' => Request::input('is_active')
+            'name' => $this->request->post('name'),
+            'multiplier_factor' => $this->request->post('multiplier_factor'),
+            'is_active' => $this->request->post('is_active')
         ];
 
-        $errors = Validator::fields($requestData, [
+        $errors = $this->validator->fields($requestData, [
             'name' => 'required|string|max:60',
             'multiplier_factor' => 'required|numeric|min:0.01|max:' . MAX_VALUE_LIMIT_MULTIPLIER_FACTOR,
             'is_active' => 'required|in:0,1'
@@ -82,30 +88,30 @@ class GroupController
         ]);
 
         if ($errors) {
-            Session::setFlash('danger', $errors);
-            Response::redirect('same_uri');
+            $this->session->setFlash('danger', $errors);
+            $this->response->redirect('same_uri');
         }
 
-        Group::update($requestData, $groupId);
-        Session::setFlash('success', 'Grupo atualizado com sucesso');
-        Response::redirect('/groups');
+        $this->group->update($requestData, $groupId);
+        $this->session->setFlash('success', 'Grupo atualizado com sucesso');
+        $this->response->redirect('/groups');
     }
 
-    public static function delete($groupId)
+    public function delete($groupId)
     {
-        $groupData = Group::find($groupId);
+        $groupData = $this->group->find($groupId);
 
         if (!$groupData) {
-            Response::abort(404);
+            $this->response->abort(404);
         }
 
-        if (Database::existsInTables($groupId, 'group_id', ['award', 'customer'])) {
-            Session::setFlash('danger', 'Não é possível excluir este grupo');
-            Response::redirect('/groups/edit/' . $groupId);
+        if ($this->database->existsInTables($groupId, 'group_id', ['award', 'customer'])) {
+            $this->session->setFlash('danger', 'Não é possível excluir este grupo');
+            $this->response->redirect('/groups/edit/' . $groupId);
         }
 
-        Group::delete($groupId);
-        Session::setFlash('success', 'Grupo excluído com sucesso');
-        Response::redirect('/groups');
+        $this->group->delete($groupId);
+        $this->session->setFlash('success', 'Grupo excluído com sucesso');
+        $this->response->redirect('/groups');
     }
 }

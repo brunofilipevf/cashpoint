@@ -2,36 +2,43 @@
 
 namespace App\Controllers;
 
-use App\Models\{Customer, Group};
-use Core\{Request, Response, Session, Validator};
-
 class CustomerController
 {
-    public static function index()
+    public function __construct(
+        private \App\Models\Customer $customer,
+        private \App\Models\Group $group,
+        private \Core\Database $database,
+        private \Core\Request $request,
+        private \Core\Response $response,
+        private \Core\Session $session,
+        private \Core\Validator $validator
+    ) {}
+
+    public function index()
     {
-        Response::view('customer/index', [
-            'customers' => Customer::all()
+        $this->response->view('customer/index', [
+            'customers' => $this->customer->all()
         ]);
     }
 
-    public static function add()
+    public function add()
     {
-        Response::view('customer/add', [
-            'groups' => Group::all()
+        $this->response->view('customer/add', [
+            'groups' => $this->group->all()
         ]);
     }
 
-    public static function insert()
+    public function insert()
     {
         $requestData = [
-            'cpf' => Request::input('cpf'),
-            'fullname' => Request::input('fullname'),
-            'email' => Request::input('email'),
-            'phone' => Request::input('phone'),
-            'group_id' => Request::input('group_id')
+            'cpf' => $this->request->post('cpf'),
+            'fullname' => $this->request->post('fullname'),
+            'email' => $this->request->post('email'),
+            'phone' => $this->request->post('phone'),
+            'group_id' => $this->request->post('group_id')
         ];
 
-        $errors = Validator::fields($requestData, [
+        $errors = $this->validator->fields($requestData, [
             'cpf' => 'required|document|unique:customer,cpf',
             'fullname' => 'string|max:60',
             'email' => 'email|unique:customer,email',
@@ -46,46 +53,46 @@ class CustomerController
         ]);
 
         if ($errors) {
-            Session::setFlash('danger', $errors);
-            Response::redirect('same_uri');
+            $this->session->setFlash('danger', $errors);
+            $this->response->redirect('same_uri');
         }
 
-        Customer::insert($requestData);
-        Session::setFlash('success', 'Cliente adicionado com sucesso');
-        Response::redirect('/customers');
+        $this->customer->insert($requestData);
+        $this->session->setFlash('success', 'Cliente adicionado com sucesso');
+        $this->response->redirect('/customers');
     }
 
-    public static function edit($customerId)
+    public function edit($customerId)
     {
-        $customerData = Customer::find($customerId);
+        $customerData = $this->customer->find($customerId);
 
         if (!$customerData) {
-            Response::abort(404);
+            $this->response->abort(404);
         }
 
-        Response::view('customer/edit', [
+        $this->response->view('customer/edit', [
             'customer' => $customerData,
-            'groups' => Group::all()
+            'groups' => $this->group->all()
         ]);
     }
 
-    public static function update($customerId)
+    public function update($customerId)
     {
-        $customerData = Customer::find($customerId);
+        $customerData = $this->customer->find($customerId);
 
         if (!$customerData) {
-            Response::abort(404);
+            $this->response->abort(404);
         }
 
         $requestData = [
-            'fullname' => Request::input('fullname'),
-            'email' => Request::input('email'),
-            'phone' => Request::input('phone'),
-            'group_id' => Request::input('group_id'),
-            'is_active' => Request::input('is_active')
+            'fullname' => $this->request->post('fullname'),
+            'email' => $this->request->post('email'),
+            'phone' => $this->request->post('phone'),
+            'group_id' => $this->request->post('group_id'),
+            'is_active' => $this->request->post('is_active')
         ];
 
-        $errors = Validator::fields($requestData, [
+        $errors = $this->validator->fields($requestData, [
             'fullname' => 'string|max:60',
             'email' => "email|unique:customer,email,{$customerId}",
             'phone' => "phone|unique:customer,phone,{$customerId}",
@@ -100,30 +107,30 @@ class CustomerController
         ]);
 
         if ($errors) {
-            Session::setFlash('danger', $errors);
-            Response::redirect('same_uri');
+            $this->session->setFlash('danger', $errors);
+            $this->response->redirect('same_uri');
         }
 
-        Customer::update($requestData, $customerId);
-        Session::setFlash('success', 'Cliente atualizado com sucesso');
-        Response::redirect('/customers');
+        $this->customer->update($requestData, $customerId);
+        $this->session->setFlash('success', 'Cliente atualizado com sucesso');
+        $this->response->redirect('/customers');
     }
 
-    public static function delete($customerId)
+    public function delete($customerId)
     {
-        $customerData = Customer::find($customerId);
+        $customerData = $this->customer->find($customerId);
 
         if (!$customerData) {
-            Response::abort(404);
+            $this->response->abort(404);
         }
 
-        if (Database::existsInTables($customerId, 'customer_id', ['redemption', 'score'])) {
-            Session::setFlash('danger', 'Não é possível excluir este cliente');
-            Response::redirect('/customers/edit/' . $customerId);
+        if ($this->database->existsInTables($customerId, 'customer_id', ['redemption', 'score'])) {
+            $this->session->setFlash('danger', 'Não é possível excluir este cliente');
+            $this->response->redirect('/customers/edit/' . $customerId);
         }
 
-        Customer::delete($customerId);
-        Session::setFlash('success', 'Cliente excluído com sucesso');
-        Response::redirect('/customers');
+        $this->customer->delete($customerId);
+        $this->session->setFlash('success', 'Cliente excluído com sucesso');
+        $this->response->redirect('/customers');
     }
 }

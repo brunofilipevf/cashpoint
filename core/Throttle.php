@@ -4,24 +4,29 @@ namespace Core;
 
 class Throttle
 {
-    public static function handle($maxRequests = 40, $windowSeconds = 60)
+    public function __construct(
+        private Request $request,
+        private Response $response
+    ) {}
+
+    public function handle($maxRequests = 40, $windowSeconds = 60)
     {
         // -------------------------------------------------------------------
         // Prepara arquivo, conta requisições do IP e bloqueia se exceder
         // -------------------------------------------------------------------
 
         $file = __DIR__ . '/../storage/throttle.tmp';
-        $ip = Request::ip();
+        $ip = $this->request->ip();
         $now = time();
         $windowStart = $now - $windowSeconds;
-        $requestCount = self::countAndClean($file, $ip, $windowStart);
+        $requestCount = $this->countAndClean($file, $ip, $windowStart);
 
         // -------------------------------------------------------------------
         // Bloqueia se atingiu o limite
         // -------------------------------------------------------------------
 
         if ($requestCount >= $maxRequests) {
-            Response::abort(429);
+            $this->response->abort(429);
         }
 
         // -------------------------------------------------------------------
@@ -31,7 +36,7 @@ class Throttle
         file_put_contents($file, "{$ip},{$now}\n", FILE_APPEND | LOCK_EX);
     }
 
-    private static function countAndClean($file, $ip, $windowStart)
+    private function countAndClean($file, $ip, $windowStart)
     {
         // -------------------------------------------------------------------
         // Cria arquivo se não existir

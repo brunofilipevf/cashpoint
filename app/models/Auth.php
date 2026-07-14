@@ -2,31 +2,43 @@
 
 namespace App\Models;
 
-use Core\Database;
-
 class Auth
 {
-    private static $data = [];
+    private $data = [];
 
-    public static function login($username, $password)
+    public function __construct(
+        private \Core\Database $database
+    ) {}
+
+    public function login($username, $password)
     {
         $sql = "SELECT id, password FROM `user` WHERE username = ? AND is_active = 1 LIMIT 1";
-        $user = Database::selectOne($sql, [$username]);
+        $user = $this->database->selectOne($sql, [$username]);
 
-        if (!$user || !password_verify($password, $user['password'])) {
+        if ($user) {
+            $hash = $user['password'];
+        } else {
+            $hash = '$2y$10$WxROWWu.Xm4h9gRNy5wOjuEhet/hC0Nq7Vj9FoWn2/5m0hS6lP.KW';
+        }
+
+        if (!password_verify($password, $hash)) {
+            return false;
+        }
+
+        if (!$user) {
             return false;
         }
 
         return $user['id'];
     }
 
-    public static function store($data)
+    public function store($data)
     {
-        self::$data = $data;
+        $this->data = $data;
     }
 
-    public static function stored()
+    public function stored()
     {
-        return self::$data;
+        return $this->data;
     }
 }

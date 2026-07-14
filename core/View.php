@@ -4,29 +4,34 @@ namespace Core;
 
 class View
 {
-    private static $data = [];
-    private static $vars = [];
+    private $data = [];
+    private $vars = [];
 
-    public static function render($path, $data = [])
+    public function __construct(
+        private Request $request,
+        private Session $session
+    ) {}
+
+    public function render($path, $data = [])
     {
-        self::$data = $data;
-        return self::loadTemplate($path);
+        $this->data = $data;
+        return $this->loadTemplate($path);
     }
 
-    private static function helpers()
+    private function helpers()
     {
         return [
-            'partial' => [self::class, 'getPartial'],
-            'set' => [self::class, 'setVar'],
-            'get' => [self::class, 'getVar'],
-            'flash' => [self::class, 'getFlash'],
-            'csrf' => [self::class, 'getCsrf'],
-            'isRoute' => [self::class, 'isRoute'],
-            'e' => [self::class, 'escape']
+            'partial' => [$this, 'getPartial'],
+            'set' => [$this, 'setVar'],
+            'get' => [$this, 'getVar'],
+            'flash' => [$this, 'getFlash'],
+            'csrf' => [$this, 'getCsrf'],
+            'isRoute' => [$this, 'isRoute'],
+            'e' => [$this, 'escape']
         ];
     }
 
-    private static function loadTemplate($path)
+    private function loadTemplate($path)
     {
         $fullPath = __DIR__ . "/../views/{$path}.php";
 
@@ -34,8 +39,8 @@ class View
             throw new \RuntimeException("[View] Template '{$path}' não encontrado");
         }
 
-        extract(self::helpers(), EXTR_SKIP);
-        extract(self::$data, EXTR_SKIP);
+        extract($this->helpers(), EXTR_SKIP);
+        extract($this->data, EXTR_SKIP);
 
         ob_start();
 
@@ -48,54 +53,55 @@ class View
         }
     }
 
-    private static function getPartial($path)
+    private function getPartial($path)
     {
-        echo self::loadTemplate($path);
+        echo $this->loadTemplate($path);
     }
 
-    private static function setVar($key, $value)
+    private function setVar($key, $value)
     {
         if (is_string($value)) {
-            self::$vars[$key] = $value;
+            $this->vars[$key] = $value;
         }
     }
 
-    private static function getVar($key)
+    private function getVar($key)
     {
-        if (isset(self::$vars[$key])) {
-            return self::escape(self::$vars[$key]);
+        if (isset($this->vars[$key])) {
+            return $this->escape($this->vars[$key]);
         }
 
         return match ($key) {
-            'app_name' => self::escape(APP_NAME),
-            'app_author' => self::escape(APP_AUTHOR),
-            'app_description' => self::escape(APP_DESCRIPTION),
+            'app_name' => $this->escape(APP_NAME),
+            'app_author' => $this->escape(APP_AUTHOR),
+            'app_description' => $this->escape(APP_DESCRIPTION),
             default => null
         };
     }
 
-    private static function getCsrf()
+    private function getCsrf()
     {
-        $token = Session::getCsrf();
-        return self::escape($token);
+        $token = $this->session->getCsrf();
+        return $this->escape($token);
     }
 
-    private static function getFlash()
+    private function getFlash()
     {
-        $flash = Session::getFlash();
+        $flash = $this->session->getFlash();
 
         if (isset($flash['type'], $flash['message'])) {
-            $flash['type'] = self::escape($flash['type']);
-            $flash['message'] = nl2br(self::escape($flash['message']));
+            $flash['type'] = $this->escape($flash['type']);
+            $flash['message'] = nl2br($this->escape($flash['message']));
+
             return $flash;
         }
 
         return [];
     }
 
-    private static function isRoute($route, $strict = false)
+    private function isRoute($route, $strict = false)
     {
-        $uri = Request::uri();
+        $uri = $this->request->uri();
 
         if ($strict) {
             return $uri === $route;
@@ -108,12 +114,13 @@ class View
         return str_starts_with($uri, $route);
     }
 
-    private static function escape($value, $format = null)
+    private function escape($value, $format = null)
     {
         if (!is_scalar($value)) {
             if ($format === 'dash') {
                 return '—';
             }
+
             return '';
         }
 
@@ -123,6 +130,7 @@ class View
             if ($format === 'dash') {
                 return '—';
             }
+
             return '';
         }
 
@@ -137,9 +145,9 @@ class View
             }
 
             $value = match ($name) {
-                'currency' => self::formatCurrency($value),
-                'date' => self::formatDate($value, $param),
-                'document' => self::formatDocument($value, $param),
+                'currency' => $this->formatCurrency($value),
+                'date' => $this->formatDate($value, $param),
+                'document' => $this->formatDocument($value, $param),
                 default => throw new \RuntimeException("[View] Formato não encontrado para '{$name}'")
             };
         }
@@ -147,7 +155,7 @@ class View
         return htmlspecialchars($value, ENT_QUOTES | ENT_HTML5, 'UTF-8');
     }
 
-    private static function formatCurrency($value)
+    private function formatCurrency($value)
     {
         if (is_numeric($value)) {
             return 'R$ ' . number_format($value, 2, ',', '.');
@@ -156,7 +164,7 @@ class View
         return $value;
     }
 
-    private static function formatDate($value, $format = null)
+    private function formatDate($value, $format = null)
     {
         $date = \DateTime::createFromFormat('Y-m-d H:i:s', $value);
 
@@ -172,7 +180,7 @@ class View
         };
     }
 
-    private static function formatDocument($value, $format = null)
+    private function formatDocument($value, $format = null)
     {
         $clean = preg_replace('/\D/', '', $value);
         $count = mb_strlen($clean, 'UTF-8');

@@ -2,11 +2,13 @@
 
 namespace App\Models;
 
-use Core\Database;
-
 class Score
 {
-    public static function all()
+    public function __construct(
+        private \Core\Database $database
+    ) {}
+
+    public function all()
     {
         $sql = "SELECT s.*, c.cpf, u.username, COALESCE(c.fullname, c.cpf) AS fullname_or_cpf
                 FROM `score` s
@@ -14,26 +16,24 @@ class Score
                 INNER JOIN `user` u ON s.user_id = u.id
                 ORDER BY s.id DESC";
 
-        return Database::selectAll($sql);
+        return $this->database->selectAll($sql);
     }
 
-    public static function insert($data)
+    public function insert($data)
     {
         $columns = implode(', ', array_keys($data));
         $placeholders = implode(', ', array_fill(0, count($data), '?'));
         $sql = "INSERT INTO `score` ({$columns}, created_at) VALUES ({$placeholders}, NOW())";
 
-        return Database::insert($sql, array_values($data));
+        return $this->database->insert($sql, array_values($data));
     }
 
-    public static function countDailyByCustomer($customerId)
+    public function countDailyByCustomer($customerId)
     {
-        $sql = "SELECT COUNT(id) FROM `score` WHERE customer_id = ? AND DATE(created_at) = CURDATE()";
-
-        return Database::count($sql, [$customerId]);
+        return $this->database->count("SELECT 1 FROM `score` WHERE customer_id = ? AND DATE(created_at) = CURDATE()", [$customerId]);
     }
 
-    public static function findBalanceFromCustomer($customerId)
+    public function findBalanceFromCustomer($customerId)
     {
         $sql = "SELECT
                 (SELECT COALESCE(SUM(final_points), 0.00) FROM `score` WHERE customer_id = ?) as total_earned,
@@ -41,6 +41,6 @@ class Score
                 (SELECT COALESCE(SUM(final_points), 0.00) FROM `score` WHERE customer_id = ?) -
                 (SELECT COALESCE(SUM(points_used), 0.00) FROM `redemption` WHERE customer_id = ?) as balance";
 
-        return Database::selectOne($sql, [$customerId, $customerId, $customerId, $customerId]);
+        return $this->database->selectOne($sql, [$customerId, $customerId, $customerId, $customerId]);
     }
 }

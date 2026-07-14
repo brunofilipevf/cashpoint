@@ -2,39 +2,48 @@
 
 namespace App\Controllers;
 
-use App\Models\{Auth, Company, Level, User};
-use Core\{Database, Request, Response, Session, Validator};
-
 class UserController
 {
-    public static function index()
+    public function __construct(
+        private \App\Models\Auth $auth,
+        private \App\Models\Company $company,
+        private \App\Models\Level $level,
+        private \App\Models\User $user,
+        private \Core\Database $database,
+        private \Core\Request $request,
+        private \Core\Response $response,
+        private \Core\Session $session,
+        private \Core\Validator $validator
+    ) {}
+
+    public function index()
     {
-        Response::view('user/index', [
-            'users' => User::all()
+        $this->response->view('user/index', [
+            'users' => $this->user->all()
         ]);
     }
 
-    public static function add()
+    public function add()
     {
-        Response::view('user/add', [
-            'levels' => Level::all(),
-            'companies' => Company::all()
+        $this->response->view('user/add', [
+            'levels' => $this->level->all(),
+            'companies' => $this->company->all()
         ]);
     }
 
-    public static function insert()
+    public function insert()
     {
-        $authUserData = Auth::stored();
+        $authUserData = $this->auth->stored();
 
         $requestData = [
-            'username' => Request::input('username'),
-            'password' => Request::input('password'),
-            'fullname' => Request::input('fullname'),
-            'level_id' => Request::input('level_id'),
-            'company_id' => Request::input('company_id')
+            'username' => $this->request->post('username'),
+            'password' => $this->request->post('password'),
+            'fullname' => $this->request->post('fullname'),
+            'level_id' => $this->request->post('level_id'),
+            'company_id' => $this->request->post('company_id')
         ];
 
-        $errors = Validator::fields($requestData, [
+        $errors = $this->validator->fields($requestData, [
             'username' => 'required|alpha|max:60|unique:user,username',
             'password' => 'required|alphanum|min:6|max:60',
             'fullname' => 'required|string|max:60',
@@ -49,63 +58,62 @@ class UserController
         ]);
 
         if ($errors) {
-            Session::setFlash('danger', $errors);
-            Response::redirect('same_uri');
+            $this->session->setFlash('danger', $errors);
+            $this->response->redirect('same_uri');
         }
 
-        $levelData = Level::find($requestData['level_id']);
+        $levelData = $this->level->find($requestData['level_id']);
 
         if ($authUserData['hierarchy'] <= $levelData['hierarchy']) {
-            Session::setFlash('danger', 'Você não pode atribuir um nível igual ou superior ao seu');
-            Response::redirect('same_uri');
+            $this->session->setFlash('danger', 'Você não pode atribuir um nível igual ou superior ao seu');
+            $this->response->redirect('same_uri');
         }
 
-        User::insert($requestData);
-        Session::setFlash('success', 'Usuário adicionado com sucesso');
-        Response::redirect('/users');
+        $this->user->insert($requestData);
+        $this->session->setFlash('success', 'Usuário adicionado com sucesso');
+        $this->response->redirect('/users');
     }
 
-    public static function edit($userId)
+    public function edit($userId)
     {
-        $userData = User::find($userId);
+        $userData = $this->user->find($userId);
 
         if (!$userData) {
-            Response::abort(404);
+            $this->response->abort(404);
         }
 
-        Response::view('user/edit', [
+        $this->response->view('user/edit', [
             'user' => $userData,
-            'levels' => Level::all(),
-            'companies' => Company::all()
+            'levels' => $this->level->all(),
+            'companies' => $this->company->all()
         ]);
     }
 
-    public static function update($userId)
+    public function update($userId)
     {
-        $userData = User::find($userId);
+        $authUserData = $this->auth->stored();
+        $userData = $this->user->find($userId);
 
         if (!$userData) {
-            Response::abort(404);
+            $this->response->abort(404);
         }
-
-        $authUserData = Auth::stored();
 
         if ($authUserData['id'] !== $userId) {
             if ($authUserData['hierarchy'] <= $userData['hierarchy']) {
-                Session::setFlash('danger', 'Você não pode editar este usuário');
-                Response::redirect('same_uri');
+                $this->session->setFlash('danger', 'Você não pode editar este usuário');
+                $this->response->redirect('same_uri');
             }
         }
 
         $requestData = [
-            'password' => Request::input('password'),
-            'fullname' => Request::input('fullname'),
-            'level_id' => Request::input('level_id'),
-            'company_id' => Request::input('company_id'),
-            'is_active' => Request::input('is_active')
+            'password' => $this->request->post('password'),
+            'fullname' => $this->request->post('fullname'),
+            'level_id' => $this->request->post('level_id'),
+            'company_id' => $this->request->post('company_id'),
+            'is_active' => $this->request->post('is_active')
         ];
 
-        $errors = Validator::fields($requestData, [
+        $errors = $this->validator->fields($requestData, [
             'password' => 'alphanum|min:6|max:60',
             'fullname' => 'required|string|max:60',
             'level_id' => 'required|integer|exist:level,id',
@@ -120,8 +128,8 @@ class UserController
         ]);
 
         if ($errors) {
-            Session::setFlash('danger', $errors);
-            Response::redirect('same_uri');
+            $this->session->setFlash('danger', $errors);
+            $this->response->redirect('same_uri');
         }
 
         if ($authUserData['id'] === $userId) {
@@ -130,46 +138,45 @@ class UserController
         }
 
         if ($authUserData['id'] !== $userId) {
-            $levelData = Level::find($requestData['level_id']);
+            $levelData = $this->level->find($requestData['level_id']);
 
             if ($authUserData['hierarchy'] <= $levelData['hierarchy']) {
-                Session::setFlash('danger', 'Você não pode atribuir um nível igual ou superior ao seu');
-                Response::redirect('same_uri');
+                $this->session->setFlash('danger', 'Você não pode atribuir um nível igual ou superior ao seu');
+                $this->response->redirect('same_uri');
             }
         }
 
-        User::update($requestData, $userId);
-        Session::setFlash('success', 'Usuário atualizado com sucesso');
-        Response::redirect('/users');
+        $this->user->update($requestData, $userId);
+        $this->session->setFlash('success', 'Usuário atualizado com sucesso');
+        $this->response->redirect('/users');
     }
 
-    public static function delete($userId)
+    public function delete($userId)
     {
-        $userData = User::find($userId);
+        $authUserData = $this->auth->stored();
+        $userData = $this->user->find($userId);
 
         if (!$userData) {
-            Response::abort(404);
+            $this->response->abort(404);
         }
 
-        $authUserData = Auth::stored();
-
         if ($authUserData['id'] === $userId) {
-            Session::setFlash('danger', 'Você não pode excluir seu próprio usuário');
-            Response::redirect('/users/edit/' . $userId);
+            $this->session->setFlash('danger', 'Você não pode excluir seu próprio usuário');
+            $this->response->redirect('/users/edit/' . $userId);
         }
 
         if ($authUserData['hierarchy'] <= $userData['hierarchy']) {
-            Session::setFlash('danger', 'Você não pode excluir este usuário');
-            Response::redirect('/users/edit/' . $userId);
+            $this->session->setFlash('danger', 'Você não pode excluir este usuário');
+            $this->response->redirect('/users/edit/' . $userId);
         }
 
-        if (Database::existsInTables($userId, 'user_id', ['activity', 'redemption', 'score'])) {
-            Session::setFlash('danger', 'Não é possível excluir este usuário');
-            Response::redirect('/users/edit/' . $userId);
+        if ($this->database->existsInTables($userId, 'user_id', ['activity', 'redemption', 'score'])) {
+            $this->session->setFlash('danger', 'Não é possível excluir este usuário');
+            $this->response->redirect('/users/edit/' . $userId);
         }
 
-        User::delete($userId);
-        Session::setFlash('success', 'Usuário excluído com sucesso');
-        Response::redirect('/users');
+        $this->user->delete($userId);
+        $this->session->setFlash('success', 'Usuário excluído com sucesso');
+        $this->response->redirect('/users');
     }
 }

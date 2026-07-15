@@ -22,7 +22,7 @@ class Response
         http_response_code($status);
         header('Content-Type: application/json; charset=UTF-8');
         $this->getHeaders();
-        exit(json_encode($data));
+        exit(json_encode($content));
     }
 
     public function view($path, $data = [], $status = 200)

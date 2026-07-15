@@ -89,6 +89,16 @@ class Request
             return [];
         }
 
+        array_walk_recursive($data, function (&$value) {
+            if (is_string($value)) {
+                $value = trim($value);
+
+                if ($value === '') {
+                    $value = null;
+                }
+            }
+        });
+
         return $data;
     }
 }

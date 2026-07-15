@@ -5,6 +5,7 @@ namespace App\Controllers;
 class ScoreControllerApi
 {
     public function __construct(
+        private \App\Models\Company $company,
         private \App\Models\Customer $customer,
         private \App\Models\Score $score,
         private \Core\Database $database,
@@ -20,42 +21,37 @@ class ScoreControllerApi
         try {
 
             $requestData = [
-                'cpf' => $this->request->json()['cpf'],
-                'codigo' => $this->request->json()['codigo'],
-                'bico' => $this->request->json()['bico'],
-                'produto_codigo_barra' => $this->request->json()['produto_codigo_barra'],
-                'produto_nome' => $this->request->json()['produto_nome'],
-                'quantidade' => $this->request->json()['quantidade'],
-                'preco_unit' => $this->request->json()['preco_unit'],
-                'valor' => $this->request->json()['valor'],
-                'hora' => $this->request->json()['hora']
+                'company_cpf' => $this->request->json()['empresa'],
+                'customer_cpf' => $this->request->json()['cpf'],
+                'supply_code' => $this->request->json()['codigo'],
+                'amount' => $this->request->json()['quantidade']
             ];
 
             $errors = $this->validator->fields($requestData, [
-                'cpf' => 'required|document|exist:customer,cpf',
-                'codigo' => 'required|integer|unique:supply,codigo',
-                'bico' => 'required|string',
-                'produto_codigo_barra' => 'required|integer',
-                'produto_nome' => 'required|string',
-                'quantidade' => 'required|numeric',
-                'preco_unit' => 'required|numeric',
-                'valor' => 'required|numeric'
+                'company_cpf' => 'required|document|exist:company,cpf',
+                'customer_cpf' => 'required|document|exist:customer,cpf',
+                'supply_code' => 'required|integer',
+                'amount' => 'required|numeric'
             ], [
-                'cpf' => 'CPF/CNPJ',
-                'codigo' => 'código',
-                'bico' => 'bico',
-                'produto_codigo_barra' => 'código de barras',
-                'produto_nome' => 'nome do produto',
-                'quantidade' => 'quantidade',
-                'preco_unit' => 'preço unitário',
-                'valor' => 'valor total'
+                'company_cpf' => 'CPF/CNPJ da empresa',
+                'customer_cpf' => 'CPF/CNPJ do cliente',
+                'supply_code' => 'código de barras',
+                'amount' => 'quantidade'
             ]);
 
             if ($errors) {
+                $this->database->rollBack();
                 $this->response->json($errors);
             }
 
-            $customerData = $this->customer->findByCpfForUpdate($requestData['cpf']);
+            $companyData = $this->company->findByCpfForUpdate($requestData['company_cpf']);
+
+            if ($companyData['is_active'] !== 1) {
+                $this->database->rollBack();
+                $this->response->json('Empresa inativa');
+            }
+
+            $customerData = $this->customer->findByCpfForUpdate($requestData['customer_cpf']);
 
             if ($customerData['is_active'] !== 1) {
                 $this->database->rollBack();
@@ -72,10 +68,11 @@ class ScoreControllerApi
             $dataToBeSaved = [
                 'transaction_code' => bin2hex(random_bytes(32)),
                 'customer_id' => $customerData['id'],
-                'base_points' => $requestData['quantidade'],
-                'final_points' => $requestData['quantidade'],
-                'user_id' => 1
-            ];
+                'base_points' => $requestData['amount'],
+                'final_points' => $requestData['amount'],
+                'company_id' => $companyData['id'],
+                'supply_code' => $requestData['supply_code']
+            ]
 
             $this->score->insert($dataToBeSaved);
             $this->database->commit();

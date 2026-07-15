@@ -6,29 +6,33 @@ class View
 {
     private $data = [];
     private $vars = [];
+    private $aliases = [
+        'partial' => 'getPartial',
+        'set' => 'setVar',
+        'get' => 'getVar',
+        'csrf' => 'getCsrf',
+        'flash' => 'getFlash',
+        'route' => 'isRoute',
+        'e' => 'escape'
+    ];
 
     public function __construct(
         private Request $request,
         private Session $session
     ) {}
 
+    public function __call($name, $arguments)
+    {
+        if (isset($this->aliases[$name])) {
+            $method = $this->aliases[$name];
+            return $this->$method(...$arguments);
+        }
+    }
+
     public function render($path, $data = [])
     {
         $this->data = $data;
         return $this->loadTemplate($path);
-    }
-
-    private function helpers()
-    {
-        return [
-            'partial' => [$this, 'getPartial'],
-            'set' => [$this, 'setVar'],
-            'get' => [$this, 'getVar'],
-            'flash' => [$this, 'getFlash'],
-            'csrf' => [$this, 'getCsrf'],
-            'isRoute' => [$this, 'isRoute'],
-            'e' => [$this, 'escape']
-        ];
     }
 
     private function loadTemplate($path)
@@ -39,7 +43,6 @@ class View
             throw new \RuntimeException("[View] Template '{$path}' não encontrado");
         }
 
-        extract($this->helpers(), EXTR_SKIP);
         extract($this->data, EXTR_SKIP);
 
         ob_start();
@@ -89,9 +92,9 @@ class View
     {
         $flash = $this->session->getFlash();
 
-        if (isset($flash['type'], $flash['message'])) {
+        if (isset($flash['type'], $flash['content'])) {
             $flash['type'] = $this->escape($flash['type']);
-            $flash['message'] = nl2br($this->escape($flash['message']));
+            $flash['content'] = nl2br($this->escape($flash['content']));
 
             return $flash;
         }

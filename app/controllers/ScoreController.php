@@ -79,7 +79,7 @@ class ScoreController
         }
 
         $dataToBeSaved = [
-            'transaction_code' => bin2hex(random_bytes(16)),
+            'transaction_code' => bin2hex(random_bytes(32)),
             'customer_id' => $customerData['id'],
             'base_points' => $requestData['points'],
             'final_points' => $requestData['points'],

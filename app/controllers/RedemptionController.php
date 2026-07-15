@@ -104,7 +104,7 @@ class RedemptionController
         }
 
         $dataToBeSaved = [
-            'transaction_code' => bin2hex(random_bytes(16)),
+            'transaction_code' => bin2hex(random_bytes(32)),
             'customer_id' => $customerData['id'],
             'award_id' => $awardData['id'],
             'product_id' => $awardData['product_id'],

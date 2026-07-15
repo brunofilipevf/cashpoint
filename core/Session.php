@@ -119,19 +119,19 @@ class Session
         }
 
         $this->set('flash.type', $type);
-        $this->set('flash.message', $message);
+        $this->set('flash.content', $content);
     }
 
     public function getFlash()
     {
         $flash = [
             'type' => $this->get('flash.type'),
-            'message' => $this->get('flash.message')
+            'content' => $this->get('flash.content')
         ];
 
         $this->unset('flash');
 
-        if ($flash['type'] === null || $flash['message'] === null) {
+        if ($flash['type'] === null || $flash['content'] === null) {
             return [];
         }
 

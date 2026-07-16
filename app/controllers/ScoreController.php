@@ -22,6 +22,19 @@ class ScoreController
         ]);
     }
 
+    public function show($scoreId)
+    {
+        $scoreData = $this->score->find($scoreId);
+
+        if (!$scoreData) {
+            $this->response->abort(404);
+        }
+
+        $this->response->view('score/show', [
+            'score' => $scoreData
+        ]);
+    }
+
     public function add()
     {
         $this->response->view('score/add');

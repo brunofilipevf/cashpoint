@@ -20,6 +20,19 @@ class Redemption
         return $this->database->selectAll($sql);
     }
 
+    public function find($redemptionId)
+    {
+        $sql = "SELECT r.*, c.cpf, u.username, a.name AS award_name, COALESCE(c.fullname, c.cpf) AS fullname_or_cpf
+                FROM `redemption` r
+                INNER JOIN `customer` c ON r.customer_id = c.id
+                INNER JOIN `award` a ON r.award_id = a.id
+                INNER JOIN `user` u ON r.user_id = u.id
+                WHERE r.id = ?
+                LIMIT 1";
+
+        return $this->database->selectOne($sql, [$redemptionId]);
+    }
+
     public function insert($data)
     {
         $columns = implode(', ', array_keys($data));

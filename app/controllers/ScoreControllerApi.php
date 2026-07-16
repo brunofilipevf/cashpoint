@@ -132,7 +132,7 @@ class ScoreControllerApi
 
             $requestArray = $this->request->json();
 
-            unset($requestArray['cpf'], $requestArray['numero']);
+            unset($requestArray['cliente'], $requestArray['numero']);
 
             $dataToBeSaved = [
                 'transaction_code' => bin2hex(random_bytes(32)),
@@ -140,6 +140,7 @@ class ScoreControllerApi
                 'base_points' => number_format((float) $requestData['amount'], 2, '.', ''),
                 'multiplier_factor' => $groupData['multiplier_factor'],
                 'final_points' => number_format((float) $requestData['amount'] * (float) $groupData['multiplier_factor'], 2, '.', ''),
+                'is_manual' => 0,
                 'company_id' => $companyData['id'],
                 'supply_code' => $requestData['supply_code'],
                 'supply_json' => json_encode($requestArray, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)

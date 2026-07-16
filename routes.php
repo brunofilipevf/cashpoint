@@ -33,6 +33,7 @@ $router->get('/logout', 'AuthController@logout', ['AuthOnly']);
 */
 
 $router->get('/scores{page}', 'ScoreController@index', ['AuthOnly:1']);
+$router->get('/scores/show/{id}', 'ScoreController@show', ['AuthOnly:1']);
 $router->get('/scores/add', 'ScoreController@add', ['AuthOnly:1']);
 $router->post('/scores/add', 'ScoreController@insert', ['VerifyCsrf', 'AuthOnly:1']);
 
@@ -46,6 +47,7 @@ $router->post('/api/scores/add', 'ScoreControllerApi@insert', ['VerifyApiToken']
 */
 
 $router->get('/redemptions{page}', 'RedemptionController@index', ['AuthOnly:1']);
+$router->get('/redemptions/show/{id}', 'RedemptionController@show', ['AuthOnly:1']);
 $router->get('/redemptions/add', 'RedemptionController@add', ['AuthOnly:1']);
 $router->post('/redemptions/add', 'RedemptionController@insert', ['VerifyCsrf', 'AuthOnly:1']);
 

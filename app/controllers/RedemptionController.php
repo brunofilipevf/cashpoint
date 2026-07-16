@@ -24,6 +24,19 @@ class RedemptionController
         ]);
     }
 
+    public function show($redemptionId)
+    {
+        $redemptionData = $this->redemption->find($redemptionId);
+
+        if (!$redemptionData) {
+            $this->response->abort(404);
+        }
+
+        $this->response->view('redemption/show', [
+            'redemption' => $redemptionData
+        ]);
+    }
+
     public function add()
     {
         $this->response->view('redemption/add', [
@@ -112,9 +125,10 @@ class RedemptionController
             'points_used' => $awardData['required_points']
         ];
 
-        $this->redemption->insert($dataToBeSaved);
+        $insertedId = $this->redemption->insert($dataToBeSaved);
+
         $this->database->commit();
         $this->session->setFlash('success', 'Resgate registrado com sucesso');
-        $this->response->redirect('/redemptions');
+        $this->response->redirect('/redemptions/show/' . $insertedId);
     }
 }

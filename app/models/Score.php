@@ -30,7 +30,7 @@ class Score
 
     public function countDailyByCustomer($customerId)
     {
-        return $this->database->count("SELECT 1 FROM `score` WHERE customer_id = ? AND DATE(created_at) = CURDATE()", [$customerId]);
+        return $this->database->count("SELECT COUNT(id) FROM `score` WHERE customer_id = ? AND DATE(created_at) = CURDATE()", [$customerId]);
     }
 
     public function findBalanceFromCustomer($customerId)

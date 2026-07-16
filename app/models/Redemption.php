@@ -31,11 +31,11 @@ class Redemption
 
     public function countByAward($awardId)
     {
-        return $this->database->count("SELECT 1 FROM `redemption` WHERE award_id = ?", [$awardId]);
+        return $this->database->count("SELECT COUNT(id) FROM `redemption` WHERE award_id = ?", [$awardId]);
     }
 
     public function countByAwardAndCustomer($awardId, $customerId)
     {
-        return $this->database->count("SELECT 1 FROM `redemption` WHERE award_id = ? AND customer_id = ?", [$awardId, $customerId]);
+        return $this->database->count("SELECT COUNT(id) FROM `redemption` WHERE award_id = ? AND customer_id = ?", [$awardId, $customerId]);
     }
 }

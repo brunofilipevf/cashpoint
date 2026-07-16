@@ -36,8 +36,8 @@ $router->get('/scores{page}', 'ScoreController@index', ['AuthOnly:1']);
 $router->get('/scores/add', 'ScoreController@add', ['AuthOnly:1']);
 $router->post('/scores/add', 'ScoreController@insert', ['VerifyCsrf', 'AuthOnly:1']);
 
-$router->get('/api/scores/add', 'ScoreControllerApi@add', []);
-$router->post('/api/scores/add', 'ScoreControllerApi@insert', []);
+$router->get('/api/scores/add', 'ScoreControllerApi@add', ['VerifyApiToken']);
+$router->post('/api/scores/add', 'ScoreControllerApi@insert', ['VerifyApiToken']);
 
 /*
 |--------------------------------------------------------------------------
@@ -62,8 +62,8 @@ $router->get('/customers/edit/{id}', 'CustomerController@edit', ['AuthOnly:2']);
 $router->post('/customers/edit/{id}', 'CustomerController@update', ['VerifyCsrf', 'AuthOnly:2']);
 $router->get('/customers/delete/{id}', 'CustomerController@delete', ['AuthOnly:3']);
 
-$router->get('/api/customers/add', 'CustomerControllerApi@add', []);
-$router->post('/api/customers/add', 'CustomerControllerApi@insert', []);
+$router->get('/api/customers/add', 'CustomerControllerApi@add', ['VerifyApiToken']);
+$router->post('/api/customers/add', 'CustomerControllerApi@insert', ['VerifyApiToken']);
 
 /*
 |--------------------------------------------------------------------------

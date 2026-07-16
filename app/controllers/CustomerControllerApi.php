@@ -47,14 +47,14 @@ class CustomerControllerApi
             ]);
 
             if ($errors) {
-                $this->response->json($errors);
+                $this->response->json(['error', $errors[0]]);
             }
 
             $this->customer->insert($requestData);
-            $this->response->json('Cliente adicionado com sucesso');
+            $this->response->json(['success', 'Cliente adicionado com sucesso']);
 
         } catch (\Exception) {
-            $this->response->json('Erro ao adicionar cliente');
+            $this->response->json(['error', 'Erro ao adicionar cliente']);
         }
     }
 }

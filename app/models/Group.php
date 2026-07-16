@@ -18,6 +18,11 @@ class Group
         return $this->database->selectOne("SELECT * FROM `group` WHERE id = ? LIMIT 1", [$groupId]);
     }
 
+    public function findForUpdate($groupId)
+    {
+        return $this->database->selectOne("SELECT * FROM `group` WHERE id = ? LIMIT 1 FOR UPDATE", [$groupId]);
+    }
+
     public function insert($data)
     {
         $columns = implode(', ', array_keys($data));

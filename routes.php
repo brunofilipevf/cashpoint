@@ -36,6 +36,7 @@ $router->get('/scores{page}', 'ScoreController@index', ['AuthOnly:1']);
 $router->get('/scores/add', 'ScoreController@add', ['AuthOnly:1']);
 $router->post('/scores/add', 'ScoreController@insert', ['VerifyCsrf', 'AuthOnly:1']);
 
+$router->get('/api/scores/add', 'ScoreControllerApi@add', []);
 $router->post('/api/scores/add', 'ScoreControllerApi@insert', []);
 
 /*

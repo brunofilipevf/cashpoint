@@ -147,6 +147,7 @@ CREATE TABLE `score` (
     is_manual TINYINT UNSIGNED NOT NULL DEFAULT 1,
     company_id INT UNSIGNED DEFAULT NULL,
     supply_code INT UNSIGNED DEFAULT NULL,
+    supply_json JSON DEFAULT NULL,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT chk_score_base_points_min CHECK (base_points >= 0.00),
     CONSTRAINT chk_score_multiplier_factor_min CHECK (multiplier_factor >= 0.00),
@@ -154,7 +155,7 @@ CREATE TABLE `score` (
     CONSTRAINT fk_score_customer FOREIGN KEY (customer_id) REFERENCES `customer`(id) ON DELETE RESTRICT ON UPDATE CASCADE,
     CONSTRAINT fk_score_user FOREIGN KEY (user_id) REFERENCES `user`(id) ON DELETE RESTRICT ON UPDATE CASCADE,
     CONSTRAINT fk_score_company FOREIGN KEY (company_id) REFERENCES `company`(id) ON DELETE RESTRICT ON UPDATE CASCADE,
-    CONSTRAINT uq_score_company_abastecimento UNIQUE (company_id, supply_code)
+    CONSTRAINT uq_score_company_supply UNIQUE (company_id, supply_code)
 ) ENGINE=InnoDB;
 
 -- =========================================================

@@ -13,7 +13,7 @@ class Score
         $sql = "SELECT s.*, c.cpf, u.username, COALESCE(c.fullname, c.cpf) AS fullname_or_cpf
                 FROM `score` s
                 INNER JOIN `customer` c ON s.customer_id = c.id
-                INNER JOIN `user` u ON s.user_id = u.id
+                LEFT JOIN `user` u ON s.user_id = u.id
                 ORDER BY s.id DESC";
 
         return $this->database->selectAll($sql);
@@ -42,5 +42,10 @@ class Score
                 (SELECT COALESCE(SUM(points_used), 0.00) FROM `redemption` WHERE customer_id = ?) as balance";
 
         return $this->database->selectOne($sql, [$customerId, $customerId, $customerId, $customerId]);
+    }
+
+    public function findBySupplyCode($supplyCode)
+    {
+        return $this->database->selectOne("SELECT * FROM `score` WHERE supply_code = ? LIMIT 1", [$supplyCode]);
     }
 }

@@ -18,11 +18,6 @@ class Product
         return $this->database->selectOne("SELECT * FROM `product` WHERE id = ? LIMIT 1", [$productId]);
     }
 
-    public function findByBarcodeForUpdate($barcode)
-    {
-        return $this->database->selectOne("SELECT * FROM `product` WHERE barcode = ? LIMIT 1 FOR UPDATE", [$barcode]);
-    }
-
     public function insert($data)
     {
         $columns = implode(', ', array_keys($data));

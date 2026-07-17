@@ -73,7 +73,7 @@ class CustomerControllerApi
             $this->customer->insert($requestData);
             $this->response->json(['success', 'Cliente adicionado com sucesso']);
 
-        } catch (\Exception) {
+        } catch (\Throwable) {
             // -------------------------------------------------------------------
             // Retorna erro em caso de falha
             // -------------------------------------------------------------------

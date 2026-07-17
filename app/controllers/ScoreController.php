@@ -9,6 +9,7 @@ class ScoreController
         private \App\Models\Customer $customer,
         private \App\Models\Score $score,
         private \Core\Database $database,
+        private \Core\Email $email,
         private \Core\Request $request,
         private \Core\Response $response,
         private \Core\Session $session,
@@ -101,6 +102,26 @@ class ScoreController
 
         $this->score->insert($dataToBeSaved);
         $this->database->commit();
+
+        if ($customerData['email']) {
+            $body = "Olá, %s\n\nVocê acaba de receber %s pontos em sua conta!\nCódigo de transação: %s\n\nAgradecemos a preferência!";
+
+            if (!$customerData['fullname']) {
+                $customerData['fullname'] = 'Cliente';
+            }
+
+            $this->email->send([
+                'to' => $customerData['email'],
+                'subject' => 'Pontos Creditados - ' . APP_NAME,
+                'body' => sprintf(
+                    $body,
+                    $customerData['fullname'],
+                    $dataToBeSaved['final_points'],
+                    $dataToBeSaved['transaction_code']
+                )
+            ]);
+        }
+
         $this->session->setFlash('success', 'Pontuação registrada com sucesso');
         $this->response->redirect('/scores');
     }

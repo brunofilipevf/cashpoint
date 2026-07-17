@@ -10,6 +10,7 @@ class ScoreControllerApi
         private \App\Models\Group $group,
         private \App\Models\Score $score,
         private \Core\Database $database,
+        private \Core\Email $email,
         private \Core\Request $request,
         private \Core\Response $response,
         private \Core\Validator $validator
@@ -132,7 +133,7 @@ class ScoreControllerApi
 
             $requestArray = $this->request->json();
 
-            unset($requestArray['cliente'], $requestArray['numero']);
+            unset($requestArray['cliente']);
 
             $dataToBeSaved = [
                 'transaction_code' => bin2hex(random_bytes(32)),
@@ -152,9 +153,33 @@ class ScoreControllerApi
 
             $this->score->insert($dataToBeSaved);
             $this->database->commit();
+
+            // -------------------------------------------------------------------
+            // Envia e-mail de notificação ao cliente
+            // -------------------------------------------------------------------
+
+            if ($customerData['email']) {
+                $body = "Olá, %s\n\nVocê acaba de receber %s pontos em sua conta!\nCódigo de transação: %s\n\nAgradecemos a preferência!";
+
+                if (!$customerData['fullname']) {
+                    $customerData['fullname'] = 'Cliente';
+                }
+
+                $this->email->send([
+                    'to' => $customerData['email'],
+                    'subject' => 'Pontos Creditados - ' . APP_NAME,
+                    'body' => sprintf(
+                        $body,
+                        $customerData['fullname'],
+                        $dataToBeSaved['final_points'],
+                        $dataToBeSaved['transaction_code']
+                    )
+                ]);
+            }
+
             $this->response->json(['success', 'Pontuação registrada com sucesso']);
 
-        } catch (\Exception) {
+        } catch (\Throwable) {
             // -------------------------------------------------------------------
             // Reverte a transação em caso de erro
             // -------------------------------------------------------------------

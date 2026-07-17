@@ -11,6 +11,7 @@ class RedemptionController
         private \App\Models\Redemption $redemption,
         private \App\Models\Score $score,
         private \Core\Database $database,
+        private \Core\Email $email,
         private \Core\Request $request,
         private \Core\Response $response,
         private \Core\Session $session,
@@ -126,8 +127,28 @@ class RedemptionController
         ];
 
         $insertedId = $this->redemption->insert($dataToBeSaved);
-
         $this->database->commit();
+
+        if ($customerData['email']) {
+            $body = "Olá, %s\n\nResgate realizado com sucesso!\nPremiação: %s\nPontos utilizados: %s\nCódigo de transação: %s\n\nAproveite!";
+
+            if (!$customerData['fullname']) {
+                $customerData['fullname'] = 'Cliente';
+            }
+
+            $this->email->send([
+                'to' => $customerData['email'],
+                'subject' => 'Resgate de Premiação - ' . APP_NAME,
+                'body' => sprintf(
+                    $body,
+                    $customerData['fullname'],
+                    $awardData['name'],
+                    $dataToBeSaved['points_used'],
+                    $dataToBeSaved['transaction_code']
+                )
+            ]);
+        }
+
         $this->session->setFlash('success', 'Resgate registrado com sucesso');
         $this->response->redirect('/redemptions/show/' . $insertedId);
     }

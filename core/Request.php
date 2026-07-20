@@ -83,6 +83,10 @@ class Request
             return [];
         }
 
+        if (strlen($input) > 1048576) {
+            return [];
+        }
+
         $data = json_decode($input, true);
 
         if (!is_array($data)) {

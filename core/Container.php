@@ -17,6 +17,10 @@ class Container
 
     private function resolve($class)
     {
+        if (!class_exists($class)) {
+            throw new \RuntimeException("[Container] Classe '{$class}' não encontrada");
+        }
+
         $reflection = new \ReflectionClass($class);
         $constructor = $reflection->getConstructor();
 

@@ -62,7 +62,7 @@ class Session
         $param = session_get_cookie_params();
 
         setcookie(session_name(), '', [
-            'expires' => 0,
+            'expires' => time() - 3600,
             'path' => $param['path'],
             'domain' => $param['domain'],
             'secure' => $param['secure'],

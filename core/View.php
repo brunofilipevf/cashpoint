@@ -48,11 +48,15 @@ class View
         ob_start();
 
         try {
+
             include $fullPath;
             return ob_get_clean();
+
         } catch (\Throwable $e) {
+
             ob_end_clean();
             throw $e;
+
         }
     }
 

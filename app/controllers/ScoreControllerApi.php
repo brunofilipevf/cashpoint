@@ -18,10 +18,6 @@ class ScoreControllerApi
 
     public function add()
     {
-        // -------------------------------------------------------------------
-        // Retorna os campos esperados para pontuação
-        // -------------------------------------------------------------------
-
         $fillables = [
             'cliente' => 'CPF/CNPJ'
         ];
@@ -31,17 +27,9 @@ class ScoreControllerApi
 
     public function insert()
     {
-        // -------------------------------------------------------------------
-        // Inicia transação para garantir consistência
-        // -------------------------------------------------------------------
-
         $this->database->beginTransaction();
 
         try {
-
-            // -------------------------------------------------------------------
-            // Obtém os dados do corpo da requisição
-            // -------------------------------------------------------------------
 
             $requestData = [
                 'company_cpf' => $this->request->json()['empresa'],
@@ -50,15 +38,11 @@ class ScoreControllerApi
                 'amount' => $this->request->json()['quantidade']
             ];
 
-            // -------------------------------------------------------------------
-            // Valida os campos obrigatórios
-            // -------------------------------------------------------------------
-
             $errors = $this->validator->fields($requestData, [
                 'company_cpf' => 'required|document|exist:company,cpf',
                 'customer_cpf' => 'required|document|exist:customer,cpf',
                 'supply_code' => 'required|integer',
-                'amount' => 'required|numeric:10,3'
+                'amount' => 'required|numeric'
             ], [
                 'company_cpf' => 'CPF/CNPJ da empresa',
                 'customer_cpf' => 'CPF/CNPJ do cliente',
@@ -71,19 +55,11 @@ class ScoreControllerApi
                 $this->response->json(['error', $errors[0]]);
             }
 
-            // -------------------------------------------------------------------
-            // Verifica se o abastecimento já foi pontuado
-            // -------------------------------------------------------------------
-
             $scoreData = $this->score->findBySupplyCode($requestData['supply_code']);
 
             if ($scoreData) {
                 $this->response->json(['error', 'Este abastecimento já foi pontuado']);
             }
-
-            // -------------------------------------------------------------------
-            // Busca empresa e verifica se está ativa
-            // -------------------------------------------------------------------
 
             $companyData = $this->company->findByCpfForUpdate($requestData['company_cpf']);
 
@@ -92,20 +68,12 @@ class ScoreControllerApi
                 $this->response->json(['error', 'Empresa inativa']);
             }
 
-            // -------------------------------------------------------------------
-            // Busca cliente e verifica se está ativo
-            // -------------------------------------------------------------------
-
             $customerData = $this->customer->findByCpfForUpdate($requestData['customer_cpf']);
 
             if ($customerData['is_active'] !== 1) {
                 $this->database->rollBack();
                 $this->response->json(['error', 'Cliente inativo']);
             }
-
-            // -------------------------------------------------------------------
-            // Busca grupo do cliente para obter fator multiplicador
-            // -------------------------------------------------------------------
 
             $groupData = $this->group->findForUpdate($customerData['group_id']);
 
@@ -116,24 +84,12 @@ class ScoreControllerApi
                 $this->response->json(['error', 'Grupo do cliente inativo']);
             }
 
-            // -------------------------------------------------------------------
-            // Verifica limite diário de pontuações do cliente
-            // -------------------------------------------------------------------
-
             $dailyCount = $this->score->countDailyByCustomer($customerData['id']);
 
             if ($dailyCount >= MAX_DAILY_LIMIT_POINTS_PER_CUSTOMER) {
                 $this->database->rollBack();
                 $this->response->json(['error', 'Limite máximo de pontuação diaria por cliente atingido']);
             }
-
-            // -------------------------------------------------------------------
-            // Prepara os dados da pontuação
-            // -------------------------------------------------------------------
-
-            $requestArray = $this->request->json();
-
-            unset($requestArray['cliente']);
 
             $dataToBeSaved = [
                 'transaction_code' => bin2hex(random_bytes(32)),
@@ -144,19 +100,19 @@ class ScoreControllerApi
                 'is_manual' => 0,
                 'company_id' => $companyData['id'],
                 'supply_code' => $requestData['supply_code'],
-                'supply_json' => json_encode($requestArray, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
+                'supply_json' => json_encode([
+                    'codigo' => $this->request->json()['codigo'],
+                    'bico' => $this->request->json()['bico'],
+                    'produto' => $this->request->json()['produto_nome'],
+                    'quantidade' => $this->request->json()['quantidade'],
+                    'preco_unit' => $this->request->json()['preco_unit'],
+                    'valor_total' => $this->request->json()['valor_total'],
+                    'data_hora' => $this->request->json()['hora']
+                ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
             ];
-
-            // -------------------------------------------------------------------
-            // Insere a pontuação e confirma a transação
-            // -------------------------------------------------------------------
 
             $this->score->insert($dataToBeSaved);
             $this->database->commit();
-
-            // -------------------------------------------------------------------
-            // Envia e-mail de notificação ao cliente
-            // -------------------------------------------------------------------
 
             if ($customerData['email']) {
                 $body = "Olá, %s\n\nVocê acaba de receber %s pontos em sua conta!\nCódigo de transação: %s\n\nAgradecemos a preferência!";
@@ -180,12 +136,10 @@ class ScoreControllerApi
             $this->response->json(['success', 'Pontuação registrada com sucesso']);
 
         } catch (\Throwable) {
-            // -------------------------------------------------------------------
-            // Reverte a transação em caso de erro
-            // -------------------------------------------------------------------
 
             $this->database->rollBack();
             $this->response->json(['error', 'Erro ao registrar pontuação']);
+
         }
     }
 }

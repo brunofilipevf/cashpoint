@@ -67,7 +67,7 @@ class Router
         foreach ($middlewares as $middleware) {
             $parts = explode(':', $middleware, 2);
             $class = $parts[0];
-            $instance = $this->container->get("App\\Middlewares\\{$class}");
+            $instance = $this->container->get('App\\Middlewares\\' . $class);
 
             if (isset($parts[1])) {
                 $instance->handle((int) $parts[1]);
@@ -82,7 +82,7 @@ class Router
         $parts = explode('@', $handler, 2);
         $class = $parts[0];
         $method = $parts[1];
-        $instance = $this->container->get("App\\Controllers\\{$class}");
+        $instance = $this->container->get('App\\Controllers\\' . $class);
 
         array_shift($matches);
         $params = array_map('intval', $matches);

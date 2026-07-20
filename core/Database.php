@@ -48,9 +48,7 @@ class Database
             return (int) $this->getConnection()->lastInsertId();
         }
 
-        if ($this->getConnection()->inTransaction()) {
-            $this->rollBack();
-        }
+        $this->rollBack();
 
         throw new \PDOException('Erro ao inserir registro, nenhuma linha foi afetada');
     }
@@ -104,16 +102,22 @@ class Database
 
     public function beginTransaction()
     {
-        $this->getConnection()->beginTransaction();
+        if (!$this->getConnection()->inTransaction()) {
+            $this->getConnection()->beginTransaction();
+        }
     }
 
     public function commit()
     {
-        $this->getConnection()->commit();
+        if ($this->getConnection()->inTransaction()) {
+            $this->getConnection()->commit();
+        }
     }
 
     public function rollBack()
     {
-        $this->getConnection()->rollBack();
+        if ($this->getConnection()->inTransaction()) {
+            $this->getConnection()->rollBack();
+        }
     }
 }

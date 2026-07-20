@@ -35,7 +35,12 @@ class ScoreControllerApi
                 'company_cpf' => $this->request->json()['empresa'],
                 'customer_cpf' => $this->request->json()['cliente'],
                 'supply_code' => $this->request->json()['codigo'],
-                'amount' => $this->request->json()['quantidade']
+                'nozzle' => $this->request->json()['bico'],
+                'product_name' => $this->request->json()['produto_nome'],
+                'amount' => $this->request->json()['quantidade'],
+                'unit_price' => $this->request->json()['preco_unit'],
+                'total_value' => $this->request->json()['valor_total'],
+                'date_hour' => $this->request->json()['hora']
             ];
 
             $errors = $this->validator->fields($requestData, [
@@ -92,7 +97,7 @@ class ScoreControllerApi
             }
 
             $dataToBeSaved = [
-                'transaction_code' => bin2hex(random_bytes(32)),
+                'transaction_code' => date('Ymd') . substr(md5(uniqid(mt_rand(), true)), 0, 8),
                 'customer_id' => $customerData['id'],
                 'base_points' => number_format((float) $requestData['amount'], 2, '.', ''),
                 'multiplier_factor' => $groupData['multiplier_factor'],
@@ -101,13 +106,13 @@ class ScoreControllerApi
                 'company_id' => $companyData['id'],
                 'supply_code' => $requestData['supply_code'],
                 'supply_json' => json_encode([
-                    'codigo' => $this->request->json()['codigo'],
-                    'bico' => $this->request->json()['bico'],
-                    'produto' => $this->request->json()['produto_nome'],
-                    'quantidade' => $this->request->json()['quantidade'],
-                    'preco_unit' => $this->request->json()['preco_unit'],
-                    'valor_total' => $this->request->json()['valor_total'],
-                    'data_hora' => $this->request->json()['hora']
+                    'codigo' => $requestData['supply_code'],
+                    'bico' => $requestData['nozzle'],
+                    'produto' => $requestData['product_name'],
+                    'quantidade' => $requestData['amount'],
+                    'preco_unit' => $requestData['unit_price'],
+                    'valor_total' => $requestData['total_value'],
+                    'data_hora' => $requestData['date_hour']
                 ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
             ];
 
@@ -133,10 +138,34 @@ class ScoreControllerApi
                 ]);
             }
 
-            $this->response->json(['success', 'Pontuação registrada com sucesso']);
+            $receipt = sprintf(
+                "================================\n" .
+                "     COMPROVANTE DE PONTUAÇÃO\n" .
+                "================================\n\n" .
+                "Cliente: %s\n" .
+                "Produto: %s\n" .
+                "Qtd: %d L\n" .
+                "Pontos: %s\n" .
+                "Saldo atual: %s\n" .
+                "Data: %s\n" .
+                "Transação: %s\n\n" .
+                "================================\n" .
+                "    Obrigado pela Compra!\n" .
+                "================================",
+                $customerData['fullname'],
+                $requestData['product_name'],
+                $requestData['amount'],
+                $dataToBeSaved['final_points'],
+                $this->score->findBalanceFromCustomer($customerData['id'])['balance'],
+                date('d/m/Y H:i:s'),
+                implode('-', str_split($dataToBeSaved['transaction_code'], 4))
+            );
 
-        } catch (\Throwable) {
+            $this->response->json(['success', 'Pontuação registrada com sucesso', $receipt]);
 
+        } catch (\Throwable $e) {
+
+            error_log('[ScoreAPI] Erro ao registrar pontuação: ' . (string) $e);
             $this->database->rollBack();
             $this->response->json(['error', 'Erro ao registrar pontuação']);
 

@@ -138,7 +138,7 @@ VALUES ('Troque 800 pontos por uma Coca-Cola Lata 350ml', 1, 800.00, 1000, 2, '2
 
 CREATE TABLE `score` (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    transaction_code CHAR(64) UNIQUE NOT NULL,
+    transaction_code CHAR(16) UNIQUE NOT NULL,
     customer_id INT UNSIGNED NOT NULL,
     base_points DECIMAL(10,2) NOT NULL DEFAULT 0.00,
     multiplier_factor DECIMAL(10,2) NOT NULL DEFAULT 1.00,
@@ -164,7 +164,7 @@ CREATE TABLE `score` (
 
 CREATE TABLE `redemption` (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    transaction_code CHAR(64) UNIQUE NOT NULL,
+    transaction_code CHAR(16) UNIQUE NOT NULL,
     customer_id INT UNSIGNED NOT NULL,
     award_id INT UNSIGNED NOT NULL,
     product_id INT UNSIGNED NOT NULL,

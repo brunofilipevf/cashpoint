@@ -118,7 +118,7 @@ class RedemptionController
         }
 
         $dataToBeSaved = [
-            'transaction_code' => bin2hex(random_bytes(32)),
+            'transaction_code' => date('Ymd') . substr(md5(uniqid(mt_rand(), true)), 0, 8),
             'customer_id' => $customerData['id'],
             'award_id' => $awardData['id'],
             'product_id' => $awardData['product_id'],

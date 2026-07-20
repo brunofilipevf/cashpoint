@@ -53,8 +53,9 @@ class CustomerControllerApi
             $this->customer->insert($requestData);
             $this->response->json(['success', 'Cliente adicionado com sucesso']);
 
-        } catch (\Throwable) {
+        } catch (\Throwable $e) {
 
+            error_log('[CustomerAPI] Erro ao adicionar cliente: ' . (string) $e);
             $this->response->json(['error', 'Erro ao adicionar cliente']);
 
         }

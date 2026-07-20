@@ -93,7 +93,7 @@ class ScoreController
         }
 
         $dataToBeSaved = [
-            'transaction_code' => bin2hex(random_bytes(32)),
+            'transaction_code' => date('Ymd') . substr(md5(uniqid(mt_rand(), true)), 0, 8),
             'customer_id' => $customerData['id'],
             'base_points' => $requestData['points'],
             'final_points' => $requestData['points'],

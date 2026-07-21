@@ -96,6 +96,16 @@ class ScoreControllerApi
                 $this->response->json(['error', 'Limite máximo de pontuação diaria por cliente atingido']);
             }
 
+            $supplyJsonData = json_encode([
+                'codigo' => $requestData['supply_code'],
+                'bico' => $requestData['nozzle'],
+                'produto' => $requestData['product_name'],
+                'quantidade' => $requestData['amount'],
+                'preco_unit' => $requestData['unit_price'],
+                'valor_total' => $requestData['total_value'],
+                'data_hora' => $requestData['date_hour']
+            ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+
             $dataToBeSaved = [
                 'transaction_code' => date('Ymd') . substr(md5(uniqid(mt_rand(), true)), 0, 8),
                 'customer_id' => $customerData['id'],
@@ -105,15 +115,7 @@ class ScoreControllerApi
                 'is_manual' => 0,
                 'company_id' => $companyData['id'],
                 'supply_code' => $requestData['supply_code'],
-                'supply_json' => json_encode([
-                    'codigo' => $requestData['supply_code'],
-                    'bico' => $requestData['nozzle'],
-                    'produto' => $requestData['product_name'],
-                    'quantidade' => $requestData['amount'],
-                    'preco_unit' => $requestData['unit_price'],
-                    'valor_total' => $requestData['total_value'],
-                    'data_hora' => $requestData['date_hour']
-                ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
+                'supply_json' => $supplyJsonData
             ];
 
             $this->score->insert($dataToBeSaved);

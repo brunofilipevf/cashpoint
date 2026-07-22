@@ -11,7 +11,7 @@ class RateLimit
 
     public function handle($maxRequests = 40, $windowSeconds = 60)
     {
-        $file = __DIR__ . '/../storage/rate_limit.tmp';
+        $file = ABS_PATH . '/storage/rate_limit.tmp';
         $ip = $this->request->ip();
         $now = time();
         $windowStart = $now - $windowSeconds;

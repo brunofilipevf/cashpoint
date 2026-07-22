@@ -142,7 +142,7 @@ class Session
     {
         if (session_status() !== PHP_SESSION_ACTIVE) {
             session_name('PHPSESSID');
-            session_save_path(__DIR__ . '/../storage');
+            session_save_path(ABS_PATH . '/storage');
             session_set_cookie_params([
                 'lifetime' => 0,
                 'path' => '/',

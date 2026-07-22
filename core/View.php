@@ -37,7 +37,7 @@ class View
 
     private function loadTemplate($path)
     {
-        $fullPath = __DIR__ . "/../views/{$path}.php";
+        $fullPath = ABS_PATH . "/views/{$path}.php";
 
         if (!is_file($fullPath)) {
             throw new \RuntimeException("[View] Template '{$path}' não encontrado");

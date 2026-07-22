@@ -7,17 +7,19 @@
 */
 
 try {
+    # Caminho absoluto da aplicação
+    define('ABS_PATH', dirname(__DIR__));
 
     # Carrega autoloader, constantes e configurações da aplicação
-    require __DIR__ . '/../autoload.php';
-    require __DIR__ . '/../defines.php';
-    require __DIR__ . '/../settings.php';
+    require ABS_PATH . '/autoload.php';
+    require ABS_PATH . '/defines.php';
+    require ABS_PATH . '/settings.php';
 
     # Cria o container de injeção de dependências
     $container = new Core\Container();
 
     # Carrega as rotas e executa o roteador
-    require __DIR__ . '/../routes.php';
+    require ABS_PATH . '/routes.php';
 
 } catch (RuntimeException $e) {
 

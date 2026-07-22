@@ -27,6 +27,7 @@ class Router
     {
         $pattern = preg_quote($path, '/');
         $pattern = str_replace('\\{id\\}', '([1-9][0-9]{0,9})', $pattern);
+        $pattern = str_replace('\\{page\\}', '(?:\\/page\\/([1-9][0-9]{0,9}))?', $pattern);
         $pattern = "/^{$pattern}$/";
 
         $this->routes[$method][] = [

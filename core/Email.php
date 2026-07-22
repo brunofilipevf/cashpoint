@@ -6,131 +6,77 @@ class Email
 {
     private $socket = null;
 
-    public function send($data)
+    public function send($content)
     {
-        if (!$this->connect()) {
-            error_log('[Email] Falha ao conectar ao servidor SMTP');
+        $this->socket = fsockopen('ssl://' . MAIL_HOST, MAIL_PORT, $errno, $errstr, 15);
+
+        if (!$this->socket) {
+            error_log("[Email] Erro de conexão SMTP: {$errno} - {$errstr}");
             return false;
         }
 
-        if (!$this->command('EHLO localhost', 250)) {
-            error_log('[Email] Falha em EHLO');
+        $this->readResponse();
+
+        $commands = [
+            ["EHLO localhost", 250],
+            ["AUTH LOGIN", 334],
+            [base64_encode(MAIL_USER), 334],
+            [base64_encode(MAIL_PASS), 235],
+            ["MAIL FROM: <" . MAIL_USER . ">", 250],
+            ["RCPT TO: <" . $content['to'] . ">", 250],
+            ["DATA", 354]
+        ];
+
+        foreach ($commands as $cmd) {
+            if (!$this->sendCommand($cmd[0], $cmd[1])) {
+                fclose($this->socket);
+                return false;
+            }
+        }
+
+        $headers  = "From: " . MAIL_USER . "\r\n";
+        $headers .= "To: " . $content['to'] . "\r\n";
+        $headers .= "Subject: " . $content['subject'] . "\r\n";
+        $headers .= "MIME-Version: 1.0\r\n";
+        $headers .= "Content-Type: text/plain; charset=UTF-8\r\n\r\n";
+
+        if (!$this->sendCommand($headers . $content['body'] . "\r\n.", 250)) {
+            fclose($this->socket);
             return false;
         }
 
-        if (!$this->command('AUTH LOGIN', 334)) {
-            error_log('[Email] Falha em AUTH LOGIN');
-            return false;
-        }
-
-        if (!$this->command(base64_encode(MAIL_USER), 334)) {
-            error_log('[Email] Falha ao enviar usuário');
-            return false;
-        }
-
-        if (!$this->command(base64_encode(MAIL_PASS), 235)) {
-            error_log('[Email] Falha ao autenticar (senha incorreta?)');
-            return false;
-        }
-
-        if (!$this->command('MAIL FROM:<' . MAIL_USER . '>', 250)) {
-            error_log('[Email] Falha em MAIL FROM');
-            return false;
-        }
-
-        if (!$this->command("RCPT TO:<{$data['to']}>", 250)) {
-            error_log('[Email] Falha em RCPT TO - destinatário inválido');
-            return false;
-        }
-
-        if (!$this->command('DATA', 354)) {
-            error_log('[Email] Falha em DATA');
-            return false;
-        }
-
-        $message = implode("\r\n", [
-            'MIME-Version: 1.0',
-            'Content-type: text/plain; charset=UTF-8',
-            'From: ' . APP_NAME . ' <' . MAIL_USER . '>',
-            'To: ' . $data['to'],
-            'Subject: ' . $data['subject'],
-            '', $data['body'], '.'
-        ]);
-
-        if (!$this->command($message, 250)) {
-            error_log('[Email] Falha ao enviar mensagem');
-            return false;
-        }
-
-        if (!$this->command('QUIT', 221)) {
-            error_log('[Email] Falha em QUIT');
-        }
-
+        $this->sendCommand("QUIT", 221);
         fclose($this->socket);
 
         return true;
     }
 
-    private function connect()
+    private function sendCommand($command, $expectedCode)
     {
-        $this->socket = fsockopen('ssl://' . MAIL_HOST, MAIL_PORT, $errno, $errstr, 30);
+        fputs($this->socket, $command . "\r\n");
 
-        if (!$this->socket) {
-            error_log("[Email] Falha na conexão SMTP: {$errstr} ({$errno})");
-            return false;
-        }
+        $response = $this->readResponse();
 
-        $response = fgets($this->socket, 515);
-
-        if ($response === false) {
-            error_log('[Email] Não recebeu resposta inicial do servidor');
-            fclose($this->socket);
+        if (substr($response, 0, 3) != $expectedCode) {
+            error_log("Erro SMTP [$command]: Esperado $expectedCode, obteve $response");
             return false;
         }
 
         return true;
     }
 
-    private function command($command, $expectedCode = null)
+    private function readResponse()
     {
-        if (!$this->socket) {
-            error_log('[Email] Socket não está disponível');
-            return false;
-        }
+        $response = "";
 
-        $written = fwrite($this->socket, $command . "\r\n");
+        while ($str = fgets($this->socket, 515)) {
+            $response .= $str;
 
-        if ($written === false) {
-            error_log('[Email] Erro ao escrever comando: ' . $command);
-            return false;
-        }
-
-        $lastLine = '';
-
-        while (true) {
-            $line = fgets($this->socket, 515);
-
-            if ($line === false) {
-                error_log('[Email] Erro ao ler resposta para: ' . $command);
-                return false;
-            }
-
-            $lastLine = $line;
-
-            if (strlen($line) >= 4 && $line[3] !== '-') {
+            if (substr($str, 3, 1) == ' ') {
                 break;
             }
         }
 
-        if ($expectedCode !== null) {
-            $code = (int) substr($lastLine, 0, 3);
-
-            if ($code !== $expectedCode) {
-                error_log("[Email] Código esperado '{$expectedCode}', recebido '{$code}': " . trim($lastLine));
-                return false;
-            }
-        }
-
-        return true;
+        return $response;
     }
 }

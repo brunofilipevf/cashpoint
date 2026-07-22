@@ -105,13 +105,18 @@ class GroupController
             $this->response->abort(404);
         }
 
-        if ($this->database->existsInTables($groupId, 'group_id', ['award', 'customer'])) {
-            $this->session->setFlash('danger', 'Não é possível excluir este grupo');
+        try {
+            $this->group->delete($groupId);
+            $this->session->setFlash('success', 'Grupo excluído com sucesso');
+            $this->response->redirect('/groups');
+        } catch (\PDOException $e) {
+            if ($e->getCode() === '1451') {
+                $this->session->setFlash('danger', 'Não é possível excluir este grupo');
+                $this->response->redirect('/groups/edit/' . $groupId);
+            }
+
+            $this->session->setFlash('danger', 'Erro ao excluir grupo');
             $this->response->redirect('/groups/edit/' . $groupId);
         }
-
-        $this->group->delete($groupId);
-        $this->session->setFlash('success', 'Grupo excluído com sucesso');
-        $this->response->redirect('/groups');
     }
 }

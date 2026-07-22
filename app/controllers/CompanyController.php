@@ -102,13 +102,18 @@ class CompanyController
             $this->response->abort(404);
         }
 
-        if ($this->database->existsInTables($companyId, 'company_id', ['supply', 'user'])) {
-            $this->session->setFlash('danger', 'Não é possível excluir esta empresa');
+        try {
+            $this->company->delete($companyId);
+            $this->session->setFlash('success', 'Empresa excluída com sucesso');
+            $this->response->redirect('/companies');
+        } catch (\PDOException $e) {
+            if ($e->getCode() === '1451') {
+                $this->session->setFlash('danger', 'Não é possível excluir esta empresa');
+                $this->response->redirect('/companies/edit/' . $companyId);
+            }
+
+            $this->session->setFlash('danger', 'Erro ao excluir empresa');
             $this->response->redirect('/companies/edit/' . $companyId);
         }
-
-        $this->company->delete($companyId);
-        $this->session->setFlash('success', 'Empresa excluída com sucesso');
-        $this->response->redirect('/companies');
     }
 }

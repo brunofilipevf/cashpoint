@@ -85,21 +85,6 @@ class Database
         return $stmt->fetchColumn() > 0;
     }
 
-    public function existsInTables($id, $column, $tables = [])
-    {
-        foreach ($tables as $table) {
-            $sql = "SELECT 1 FROM `{$table}` WHERE {$column} = ? LIMIT 1";
-            $stmt = $this->getConnection()->prepare($sql);
-            $stmt->execute([$id]);
-
-            if ($stmt->fetchColumn() > 0) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
     public function beginTransaction()
     {
         if (!$this->getConnection()->inTransaction()) {

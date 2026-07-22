@@ -182,13 +182,18 @@ class AwardController
             $this->response->abort(404);
         }
 
-        if ($this->database->existsInTables($awardId, 'award_id', ['redemption'])) {
-            $this->session->setFlash('danger', 'Não é possível excluir esta premiação');
+        try {
+            $this->award->delete($awardId);
+            $this->session->setFlash('success', 'Premiação excluída com sucesso');
+            $this->response->redirect('/awards');
+        } catch (\PDOException $e) {
+            if ($e->getCode() === '1451') {
+                $this->session->setFlash('danger', 'Não é possível excluir esta premiação');
+                $this->response->redirect('/awards/edit/' . $awardId);
+            }
+
+            $this->session->setFlash('danger', 'Erro ao excluir premiação');
             $this->response->redirect('/awards/edit/' . $awardId);
         }
-
-        $this->award->delete($awardId);
-        $this->session->setFlash('success', 'Premiação excluída com sucesso');
-        $this->response->redirect('/awards');
     }
 }

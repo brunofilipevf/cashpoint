@@ -8,17 +8,17 @@ class Router
 
     public function __construct(
         private Container $container,
+        private RateLimit $rateLimit,
         private Request $request,
-        private Response $response,
-        private Throttle $throttle
+        private Response $response
     ) {}
 
-    public function get($path, $handler, $middlewares)
+    public function get($path, $handler, $middlewares = [])
     {
         $this->add('GET', $path, $handler, $middlewares);
     }
 
-    public function post($path, $handler, $middlewares)
+    public function post($path, $handler, $middlewares = [])
     {
         $this->add('POST', $path, $handler, $middlewares);
     }
@@ -27,7 +27,6 @@ class Router
     {
         $pattern = preg_quote($path, '/');
         $pattern = str_replace('\\{id\\}', '([1-9][0-9]{0,9})', $pattern);
-        $pattern = str_replace('\\{page\\}', '(?:\\/page\\/([1-9][0-9]{0,9}))?', $pattern);
         $pattern = "/^{$pattern}$/";
 
         $this->routes[$method][] = [
@@ -39,7 +38,7 @@ class Router
 
     public function dispatch()
     {
-        $this->throttle->handle();
+        $this->rateLimit->handle();
 
         $method = $this->request->method();
         $uri = $this->request->uri();

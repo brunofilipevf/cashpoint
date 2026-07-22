@@ -105,13 +105,18 @@ class ProductController
             $this->response->abort(404);
         }
 
-        if ($this->database->existsInTables($productId, 'product_id', ['award', 'redemption', 'supply'])) {
-            $this->session->setFlash('danger', 'Não é possível excluir este produto');
+        try {
+            $this->product->delete($productId);
+            $this->session->setFlash('success', 'Produto excluído com sucesso');
+            $this->response->redirect('/products');
+        } catch (\PDOException $e) {
+            if ($e->getCode() === '1451') {
+                $this->session->setFlash('danger', 'Não é possível excluir este produto');
+                $this->response->redirect('/products/edit/' . $productId);
+            }
+
+            $this->session->setFlash('danger', 'Erro ao excluir produto');
             $this->response->redirect('/products/edit/' . $productId);
         }
-
-        $this->product->delete($productId);
-        $this->session->setFlash('success', 'Produto excluído com sucesso');
-        $this->response->redirect('/products');
     }
 }

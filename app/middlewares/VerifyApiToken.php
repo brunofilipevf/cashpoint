@@ -5,20 +5,21 @@ namespace App\Middlewares;
 class VerifyApiToken
 {
     public function __construct(
+        private \Core\Request $request,
         private \Core\Response $response
     ) {}
 
     public function handle()
     {
-        $token = '';
+        $headers = $this->request->headers();
 
-        $headers = getallheaders();
-
-        if (isset($headers['Authorization'])) {
-            $token = str_replace('Bearer ', '', $headers['Authorization']);
+        if (!isset($headers['Authorization'])) {
+            $this->response->json(['error', 'Token não informado']);
         }
 
-        if (!is_string($token) || $token === '' || $token === null) {
+        $token = str_replace('Bearer ', '', $headers['Authorization']);
+
+        if ($token === '') {
             $this->response->json(['error', 'Token não informado']);
         }
 

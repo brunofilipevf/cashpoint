@@ -28,11 +28,34 @@ class Request
 
         $uri = urldecode($uri);
 
-        if (!preg_match('#^[a-zA-Z0-9/\.]+$#', $uri)) {
+        if (!preg_match('#^[a-z0-9/\.]+$#', $uri)) {
             return '/';
         }
 
         return $uri;
+    }
+
+    public function headers()
+    {
+        $headers = [];
+
+        $raw = getallheaders();
+
+        foreach ($raw as $key => $value) {
+            if (!is_string($value)) {
+                continue;
+            }
+
+            $value = trim($value);
+
+            if ($value === '') {
+                $headers[$key] = null;
+            } else {
+                $headers[$key] = $value;
+            }
+        }
+
+        return $headers;
     }
 
     public function ip()

@@ -170,13 +170,18 @@ class UserController
             $this->response->redirect('/users/edit/' . $userId);
         }
 
-        if ($this->database->existsInTables($userId, 'user_id', ['activity', 'redemption', 'score'])) {
-            $this->session->setFlash('danger', 'Não é possível excluir este usuário');
+        try {
+            $this->user->delete($userId);
+            $this->session->setFlash('success', 'Usuário excluído com sucesso');
+            $this->response->redirect('/users');
+        } catch (\PDOException $e) {
+            if ($e->getCode() === '1451') {
+                $this->session->setFlash('danger', 'Não é possível excluir este usuário');
+                $this->response->redirect('/users/edit/' . $userId);
+            }
+
+            $this->session->setFlash('danger', 'Erro ao excluir usuário');
             $this->response->redirect('/users/edit/' . $userId);
         }
-
-        $this->user->delete($userId);
-        $this->session->setFlash('success', 'Usuário excluído com sucesso');
-        $this->response->redirect('/users');
     }
 }

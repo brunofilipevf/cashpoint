@@ -193,6 +193,11 @@ class Validator
             return;
         }
 
+        if (!str_contains($value, '.')) {
+            $this->errors[] = "O campo {$label} deve ser um e-mail válido";
+            return;
+        }
+
         if (mb_strlen($value, 'UTF-8') > 254) {
             $this->errors[] = "O campo {$label} está fora do limite permitido";
         }
@@ -288,7 +293,7 @@ class Validator
         $table = $parts[0];
         $column = $parts[1];
 
-        $sql = "SELECT 1 FROM `{$table}` WHERE {$column} = ? LIMIT 1";
+        $sql = "SELECT 1 FROM `{$table}` WHERE `{$column}` = ? LIMIT 1";
         $result = $this->database->exist($sql, [$value]);
 
         if (!$result) {

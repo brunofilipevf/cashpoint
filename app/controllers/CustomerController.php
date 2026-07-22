@@ -124,13 +124,18 @@ class CustomerController
             $this->response->abort(404);
         }
 
-        if ($this->database->existsInTables($customerId, 'customer_id', ['redemption', 'score'])) {
-            $this->session->setFlash('danger', 'Não é possível excluir este cliente');
+        try {
+            $this->customer->delete($customerId);
+            $this->session->setFlash('success', 'Cliente excluído com sucesso');
+            $this->response->redirect('/customers');
+        } catch (\PDOException $e) {
+            if ($e->getCode() === '1451') {
+                $this->session->setFlash('danger', 'Não é possível excluir este cliente');
+                $this->response->redirect('/customers/edit/' . $customerId);
+            }
+
+            $this->session->setFlash('danger', 'Erro ao excluir cliente');
             $this->response->redirect('/customers/edit/' . $customerId);
         }
-
-        $this->customer->delete($customerId);
-        $this->session->setFlash('success', 'Cliente excluído com sucesso');
-        $this->response->redirect('/customers');
     }
 }

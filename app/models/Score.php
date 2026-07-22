@@ -53,7 +53,17 @@ class Score
                 (SELECT COALESCE(SUM(final_points), 0.00) FROM `score` WHERE customer_id = ?) -
                 (SELECT COALESCE(SUM(points_used), 0.00) FROM `redemption` WHERE customer_id = ?) as balance";
 
-        return $this->database->selectOne($sql, [$customerId, $customerId, $customerId, $customerId]);
+        $result = $this->database->selectOne($sql, [$customerId, $customerId, $customerId, $customerId]);
+
+        if ($result === false) {
+            $result = [
+                'total_earned' => 0,
+                'total_used' => 0,
+                'balance' => 0
+            ];
+        }
+
+        return $result;
     }
 
     public function findBySupplyCode($supplyCode)

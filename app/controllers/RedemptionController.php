@@ -47,12 +47,20 @@ class RedemptionController
 
     public function insert()
     {
+        // -------------------------------------------------------------------
+        // Obtém os dados do usuário autenticado e do formulário
+        // -------------------------------------------------------------------
+
         $authUserData = $this->auth->stored();
 
         $requestData = [
             'cpf' => $this->request->post('cpf'),
             'award_id' => $this->request->post('award_id')
         ];
+
+        // -------------------------------------------------------------------
+        // Valida os campos obrigatórios
+        // -------------------------------------------------------------------
 
         $errors = $this->validator->fields($requestData, [
             'cpf' => 'required|document|exist:customer,cpf',
@@ -67,7 +75,15 @@ class RedemptionController
             $this->response->redirect('same_uri');
         }
 
+        // -------------------------------------------------------------------
+        // Inicia transação para garantir consistência
+        // -------------------------------------------------------------------
+
         $this->database->beginTransaction();
+
+        // -------------------------------------------------------------------
+        // Busca cliente com lock exclusivo
+        // -------------------------------------------------------------------
 
         $customerData = $this->customer->findByCpfForUpdate($requestData['cpf']);
 
@@ -77,6 +93,10 @@ class RedemptionController
             $this->response->redirect('same_uri');
         }
 
+        // -------------------------------------------------------------------
+        // Busca premiação com lock exclusivo
+        // -------------------------------------------------------------------
+
         $awardData = $this->award->findForUpdate($requestData['award_id']);
 
         if ($awardData['is_active'] !== 1) {
@@ -84,6 +104,10 @@ class RedemptionController
             $this->session->setFlash('danger', 'Premiação inativa');
             $this->response->redirect('same_uri');
         }
+
+        // -------------------------------------------------------------------
+        // Verifica período de vigência da premiação
+        // -------------------------------------------------------------------
 
         $now = date('Y-m-d H:i:s');
 
@@ -93,6 +117,10 @@ class RedemptionController
             $this->response->redirect('same_uri');
         }
 
+        // -------------------------------------------------------------------
+        // Verifica limite total de resgates da premiação
+        // -------------------------------------------------------------------
+
         $totalRedemptions = $this->redemption->countByAward($awardData['id']);
 
         if ($totalRedemptions >= $awardData['max_redemption_total']) {
@@ -100,6 +128,10 @@ class RedemptionController
             $this->session->setFlash('danger', 'Limite total de resgate para esta premiação atingido');
             $this->response->redirect('same_uri');
         }
+
+        // -------------------------------------------------------------------
+        // Verifica limite de resgates por cliente
+        // -------------------------------------------------------------------
 
         $customerRedemptions = $this->redemption->countByAwardAndCustomer($awardData['id'], $customerData['id']);
 
@@ -109,6 +141,10 @@ class RedemptionController
             $this->response->redirect('same_uri');
         }
 
+        // -------------------------------------------------------------------
+        // Verifica saldo de pontos do cliente
+        // -------------------------------------------------------------------
+
         $balanceData = $this->score->findBalanceFromCustomer($customerData['id']);
 
         if ($balanceData['balance'] < $awardData['required_points']) {
@@ -117,8 +153,12 @@ class RedemptionController
             $this->response->redirect('same_uri');
         }
 
+        // -------------------------------------------------------------------
+        // Prepara e insere o resgate, confirmando a transação
+        // -------------------------------------------------------------------
+
         $dataToBeSaved = [
-            'transaction_code' => date('Ymd') . substr(md5(uniqid(mt_rand(), true)), 0, 8),
+            'transaction_code' => bin2hex(random_bytes(8)),
             'customer_id' => $customerData['id'],
             'award_id' => $awardData['id'],
             'product_id' => $awardData['product_id'],
@@ -129,25 +169,50 @@ class RedemptionController
         $insertedId = $this->redemption->insert($dataToBeSaved);
         $this->database->commit();
 
+        // -------------------------------------------------------------------
+        // Monta o corpo da notificação
+        // -------------------------------------------------------------------
+
+        if (!$customerData['fullname']) {
+            $customerData['fullname'] = 'Cliente';
+        }
+
+        $currentBalance = $this->score->findBalanceFromCustomer($customerData['id'])['balance'];
+
+        $body  = "Olá, {$fullname}\n\n";
+        $body .= "Resgate realizado com sucesso!\n";
+        $body .= "Premiação: {$awardData['name']}\n";
+        $body .= "Pontos utilizados: {$dataToBeSaved['points_used']}\n";
+        $body .= "Seu saldo atual é de {$currentBalance} pontos\n";
+        $body .= "Código de transação: {$dataToBeSaved['transaction_code']}\n\n";
+        $body .= "Aproveite!";
+
+        // -------------------------------------------------------------------
+        // Envia notificação por e-mail
+        // -------------------------------------------------------------------
+
         if ($customerData['email']) {
-            $body = "Olá, %s\n\nResgate realizado com sucesso!\nPremiação: %s\nPontos utilizados: %s\nCódigo de transação: %s\n\nAproveite!";
-
-            if (!$customerData['fullname']) {
-                $customerData['fullname'] = 'Cliente';
-            }
-
             $this->email->send([
                 'to' => $customerData['email'],
                 'subject' => 'Resgate de Premiação - ' . APP_NAME,
-                'body' => sprintf(
-                    $body,
-                    $customerData['fullname'],
-                    $awardData['name'],
-                    $dataToBeSaved['points_used'],
-                    $dataToBeSaved['transaction_code']
-                )
+                'body' => $body
             ]);
         }
+
+        // -------------------------------------------------------------------
+        // Envia notificação por WhatsApp
+        // -------------------------------------------------------------------
+
+        if ($customerData['phone']) {
+            $this->zapi->send([
+                'phone' => $customerData['phone'],
+                'message' => $body
+            ]);
+        }
+
+        // -------------------------------------------------------------------
+        // Redireciona para os detalhes do resgate
+        // -------------------------------------------------------------------
 
         $this->session->setFlash('success', 'Resgate registrado com sucesso');
         $this->response->redirect('/redemptions/show/' . $insertedId);

@@ -12,12 +12,14 @@ class VerifyCsrf
 
     public function handle()
     {
-        $token = $this->request->post('csrf_token');
-        $isValid = $this->session->verifyCsrf($token);
+        if ($this->request->method() === 'POST') {
+            $token = $this->request->post('csrf_token');
+            $isValid = $this->session->verifyCsrf($token);
 
-        if (!$isValid) {
-            $this->session->setFlash('danger', 'Token de segurança inválido');
-            $this->response->redirect('same_uri');
+            if (!$isValid) {
+                $this->session->setFlash('danger', 'Token de segurança inválido');
+                $this->response->redirect('same_uri');
+            }
         }
     }
 }

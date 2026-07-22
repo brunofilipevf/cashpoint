@@ -2,7 +2,7 @@
 
 namespace Core;
 
-class Throttle
+class RateLimit
 {
     public function __construct(
         private Request $request,
@@ -11,7 +11,7 @@ class Throttle
 
     public function handle($maxRequests = 40, $windowSeconds = 60)
     {
-        $file = __DIR__ . '/../storage/throttle.tmp';
+        $file = __DIR__ . '/../storage/rate_limit.tmp';
         $ip = $this->request->ip();
         $now = time();
         $windowStart = $now - $windowSeconds;

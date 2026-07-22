@@ -13,7 +13,8 @@ class ScoreController
         private \Core\Request $request,
         private \Core\Response $response,
         private \Core\Session $session,
-        private \Core\Validator $validator
+        private \Core\Validator $validator,
+        private \Core\ZAPI $zapi
     ) {}
 
     public function index()
@@ -43,12 +44,20 @@ class ScoreController
 
     public function insert()
     {
+        // -------------------------------------------------------------------
+        // Obtém os dados do formulário
+        // -------------------------------------------------------------------
+
         $requestData = [
             'username' => $this->request->post('username'),
             'password' => $this->request->post('password'),
             'cpf' => $this->request->post('cpf'),
             'points' => $this->request->post('points')
         ];
+
+        // -------------------------------------------------------------------
+        // Valida os campos obrigatórios
+        // -------------------------------------------------------------------
 
         $errors = $this->validator->fields($requestData, [
             'username' => 'required|string',
@@ -67,6 +76,10 @@ class ScoreController
             $this->response->redirect('same_uri');
         }
 
+        // -------------------------------------------------------------------
+        // Autentica o usuário autorizador da pontuação
+        // -------------------------------------------------------------------
+
         $authorizingUserId = $this->auth->login($requestData['username'], $requestData['password']);
 
         if (!$authorizingUserId) {
@@ -74,7 +87,15 @@ class ScoreController
             $this->response->redirect('same_uri');
         }
 
+        // -------------------------------------------------------------------
+        // Inicia transação para garantir consistência
+        // -------------------------------------------------------------------
+
         $this->database->beginTransaction();
+
+        // -------------------------------------------------------------------
+        // Busca cliente com lock exclusivo
+        // -------------------------------------------------------------------
 
         $customerData = $this->customer->findByCpfForUpdate($requestData['cpf']);
 
@@ -84,6 +105,10 @@ class ScoreController
             $this->response->redirect('same_uri');
         }
 
+        // -------------------------------------------------------------------
+        // Verifica limite diário de pontuações do cliente
+        // -------------------------------------------------------------------
+
         $dailyCount = $this->score->countDailyByCustomer($customerData['id']);
 
         if ($dailyCount >= MAX_DAILY_LIMIT_POINTS_PER_CUSTOMER) {
@@ -92,8 +117,12 @@ class ScoreController
             $this->response->redirect('same_uri');
         }
 
+        // -------------------------------------------------------------------
+        // Prepara e insere a pontuação, confirmando a transação
+        // -------------------------------------------------------------------
+
         $dataToBeSaved = [
-            'transaction_code' => date('Ymd') . substr(md5(uniqid(mt_rand(), true)), 0, 8),
+            'transaction_code' => bin2hex(random_bytes(8)),
             'customer_id' => $customerData['id'],
             'base_points' => $requestData['points'],
             'final_points' => $requestData['points'],
@@ -103,24 +132,49 @@ class ScoreController
         $this->score->insert($dataToBeSaved);
         $this->database->commit();
 
+        // -------------------------------------------------------------------
+        // Monta o corpo da notificação
+        // -------------------------------------------------------------------
+
+        if (!$customerData['fullname']) {
+            $customerData['fullname'] = 'Cliente';
+        }
+
+        $currentBalance = $this->score->findBalanceFromCustomer($customerData['id'])['balance'];
+        $transactionCode = implode('-', str_split($dataToBeSaved['transaction_code'], 4));
+
+        $body  = "Olá, {$customerData['fullname']}\n\n";
+        $body .= "Você acaba de receber {$dataToBeSaved['final_points']} pontos em sua conta!\n";
+        $body .= "Seu saldo atual é de {$currentBalance} pontos\n";
+        $body .= "Código de transação: {$transactionCode}\n\n";
+        $body .= "Agradecemos a preferência!";
+
+        // -------------------------------------------------------------------
+        // Envia notificação por e-mail
+        // -------------------------------------------------------------------
+
         if ($customerData['email']) {
-            $body = "Olá, %s\n\nVocê acaba de receber %s pontos em sua conta!\nCódigo de transação: %s\n\nAgradecemos a preferência!";
-
-            if (!$customerData['fullname']) {
-                $customerData['fullname'] = 'Cliente';
-            }
-
             $this->email->send([
                 'to' => $customerData['email'],
                 'subject' => 'Pontos Creditados - ' . APP_NAME,
-                'body' => sprintf(
-                    $body,
-                    $customerData['fullname'],
-                    $dataToBeSaved['final_points'],
-                    $dataToBeSaved['transaction_code']
-                )
+                'body' => $body
             ]);
         }
+
+        // -------------------------------------------------------------------
+        // Envia notificação por WhatsApp
+        // -------------------------------------------------------------------
+
+        if ($customerData['phone']) {
+            $this->zapi->send([
+                'phone' => $customerData['phone'],
+                'message' => $body
+            ]);
+        }
+
+        // -------------------------------------------------------------------
+        // Redireciona com mensagem de sucesso
+        // -------------------------------------------------------------------
 
         $this->session->setFlash('success', 'Pontuação registrada com sucesso');
         $this->response->redirect('/scores');
